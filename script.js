@@ -523,14 +523,8 @@
   }
 
   // Checkout form submit -> placeOrder
-  checkoutForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (!placeOrder()) {
-      // validation failed: focus first errored field
-      const firstErr = $('.form__group.has-error input, .form__group.has-error select');
-      firstErr?.focus();
-    }
-  });
+  // (The submit handler is registered once at module top level below,
+  //  with a loading state and a simulated network delay.)
 
   // ==========================================================
   // 0k. AUTH MODAL (login / signup — demo mock)
