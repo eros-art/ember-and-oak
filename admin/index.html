@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Dashboard — Ember &amp; Oak Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    .adm {
+      --side-bg: #1e110b;
+      --side-fg: #c9b3a4;
+      --side-muted: #8e7363;
+      --side-active: #2b1a12;
+      --side-border: rgba(243, 236, 226, 0.08);
+      display: grid;
+      grid-template-columns: 252px 1fr;
+      min-height: 100vh;
+      background: var(--bg);
+    }
+    body.dark .adm { --side-bg: #140a06; --side-active: #241610; }
+
+    /* ---------- Sidebar ---------- */
+    .adm__side {
+      background: var(--side-bg);
+      border-right: 1px solid var(--side-border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      position: sticky; top: 0; height: 100vh;
+    }
+    .adm__brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 8px 20px;
+      border-bottom: 1px solid var(--side-border);
+      margin-bottom: 18px;
+    }
+    .adm__brand-mark {
+      width: 36px; height: 36px; flex: none;
+      border-radius: 50%;
+      background: var(--copper);
+      color: var(--steam);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .adm__brand-name { color: var(--steam); font-weight: 700; font-size: 0.95rem; line-height: 1.1; }
+    .adm__brand-sub { color: var(--side-muted); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; }
+
+    .adm__nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .adm__link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px;
+      border-radius: var(--radius-sm);
+      color: var(--side-fg);
+      font-size: 0.92rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.2s var(--ease), color 0.2s var(--ease);
+      text-align: left; background: none; width: 100%;
+    }
+    .adm__link svg { flex: none; opacity: 0.85; }
+    .adm__link:hover { background: rgba(243,236,226,0.06); color: var(--steam); }
+    .adm__link.is-active { background: var(--side-active); color: var(--copper); border-color: rgba(198,123,78,0.25); }
+
+    .adm__demo {
+      margin-top: 16px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(198,123,78,0.1);
+      border: 1px dashed rgba(198,123,78,0.35);
+      color: var(--side-muted);
+      font-size: 0.74rem;
+      line-height: 1.5;
+    }
+    .adm__demo strong { color: var(--copper); }
+
+    /* ---------- Main ---------- */
+    .adm__main { display: flex; flex-direction: column; min-width: 0; }
+    .adm__topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--line);
+      position: sticky; top: 0;
+      background: color-mix(in srgb, var(--bg) 86%, transparent);
+      backdrop-filter: blur(10px);
+      z-index: 5;
+    }
+    .adm__title {
+      font-family: var(--font-head);
+      font-size: 1.35rem;
+      color: var(--roast);
+    }
+    body.dark .adm__title { color: var(--steam); }
+    .adm__crumb { color: var(--muted); font-size: 0.78rem; }
+    .adm__top-actions { display: flex; align-items: center; gap: 12px; }
+    .adm__logout {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 14px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+      font-weight: 600; font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s var(--ease);
+    }
+    .adm__logout:hover { border-color: #c0392b; color: #c0392b; }
+
+    .adm__panel { padding: 26px 28px 40px; display: none; }
+    .adm__panel.is-active { display: block; animation: modalIn 0.3s var(--ease); }
+
+    /* Empty state (placeholder until data tasks) */
+    .adm__empty {
+      border: 1.5px dashed var(--line);
+      border-radius: var(--radius);
+      padding: 64px 32px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .adm__empty-icon {
+      width: 64px; height: 64px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: var(--latte);
+      color: var(--copper);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .adm__empty h3 { font-family: var(--font-head); color: var(--roast); font-size: 1.15rem; margin-bottom: 6px; }
+    body.dark .adm__empty h3 { color: var(--steam); }
+    .adm__empty p { font-size: 0.9rem; max-width: 380px; margin: 0 auto; }
+
+    /* ---------- Orders list (Task D) ---------- */
+    .orders__toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .orders__meta { color: var(--muted); font-size: 0.88rem; }
+    .orders__toolbar-actions { display: flex; align-items: center; gap: 10px; }
+    .seed-chip {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--copper-dark);
+      background: rgba(198,123,78,0.12);
+      border: 1px solid rgba(198,123,78,0.3);
+      padding: 5px 10px; border-radius: 999px;
+    }
+    body.dark .seed-chip { color: var(--copper); }
+    .adm__refresh {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--line); background: transparent;
+      color: var(--muted); font-weight: 600; font-size: 0.82rem;
+      cursor: pointer; transition: all 0.2s var(--ease);
+    }
+    .adm__refresh:hover { border-color: var(--copper); color: var(--copper); }
+    .adm__refresh.is-spinning svg { animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .orders__list { display: flex; flex-direction: column; gap: 12px; }
+    .orders__row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.1fr auto;
+      gap: 18px; align-items: center;
+      background: color-mix(in srgb, var(--bg) 72%, transparent);
+      border: 1.5px solid var(--line);
+      border-left: 4px solid var(--copper);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+    }
+    .orders__row:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .orders__row.is-completed { border-left-color: #4c9a5f; opacity: 0.72; }
+    .orders__row.is-cancelled { border-left-color: #c0392b; opacity: 0.55; }
+
+    .orders__id-code { font-weight: 700; font-size: 0.9rem; color: var(--roast); display: block; }
+    body.dark .orders__id-code { color: var(--steam); }
+    .orders__time { color: var(--muted); font-size: 0.78rem; }
+
+    .orders__name { font-weight: 600; font-size: 0.94rem; color: var(--fg); display: block; }
+    .orders__store { color: var(--muted); font-size: 0.8rem; }
+
+    .orders__items { color: var(--muted); font-size: 0.84rem; line-height: 1.55; min-width: 0; }
+    .orders__items b { color: var(--fg); font-weight: 600; }
+    .orders__items ul { list-style: none; margin-top: 2px; }
+    .orders__items li::before { content: '· '; color: var(--copper); }
+
+    .orders__right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .orders__total { font-family: var(--font-head); font-size: 1.15rem; font-weight: 700; color: var(--roast); }
+    body.dark .orders__total { color: var(--steam); }
+    .orders__badges { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .orders__actions { display: flex; gap: 8px; margin-top: 4px; }
+    .adm__mini {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em;
+      padding: 6px 12px; border-radius: 8px;
+      border: 1.5px solid var(--line); background: transparent;
+      color: var(--muted); cursor: pointer;
+      transition: all 0.2s var(--ease);
+    }
+    .adm__mini--done { border-color: rgba(76,154,95,0.5); color: #2f7c46; }
+    .adm__mini--done:hover { background: rgba(76,154,95,0.12); }
+    .adm__mini--cancel { border-color: rgba(192,57,43,0.5); color: #b23a2f; }
+    .adm__mini--cancel:hover { background: rgba(192,57,43,0.1); }
+    .adm__mini--reopen { border-color: rgba(198,123,78,0.5); color: var(--copper-dark); }
+    .adm__mini--reopen:hover { background: rgba(198,123,78,0.12); }
+    .adm__mini:disabled { opacity: 0.5; cursor: not-allowed; }
+    body.dark .adm__mini--reopen { color: var(--copper); }
+
+    .badge {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 4px 9px; border-radius: 999px;
+    }
+    .badge--pending     { background: rgba(198,123,78,0.15); color: var(--copper-dark); }
+    .badge--completed   { background: rgba(76,154,95,0.15);  color: #2f7c46; }
+    .badge--cancelled   { background: rgba(192,57,43,0.12);  color: #b23a2f; }
+    .badge--paid        { background: rgba(76,154,95,0.15);  color: #2f7c46; }
+    .badge--unpaid      { background: rgba(122,91,77,0.12);  color: var(--muted); }
+    .badge--soldout     { background: rgba(122,91,77,0.15);  color: var(--muted); }
+    body.dark .badge--pending { color: var(--copper); }
+    body.dark .badge--soldout { color: var(--copper); background: rgba(198,123,78,0.12); }
+
+    /* ---------- Menu manager (Task F) ---------- */
+    .mnu__toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .mnu__meta { color: var(--muted); font-size: 0.88rem; }
+    .mnu__toolbar-actions { display: flex; gap: 8px; }
+
+    .mnu__list { display: flex; flex-direction: column; gap: 10px; }
+    .mnu__row {
+      display: grid;
+      grid-template-columns: 56px 1.6fr 1fr auto auto auto;
+      gap: 16px; align-items: center;
+      background: color-mix(in srgb, var(--bg) 72%, transparent);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), opacity 0.2s var(--ease);
+    }
+    .mnu__row:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .mnu__row.is-soldout { opacity: 0.55; }
+
+    .mnu__thumb {
+      width: 56px; height: 56px; border-radius: 10px; object-fit: cover;
+      border: 1px solid var(--line);
+    }
+    .mnu__name { font-weight: 600; font-size: 0.94rem; color: var(--fg); display: block; line-height: 1.3; }
+    .mnu__desc { color: var(--muted); font-size: 0.78rem; line-height: 1.4; margin-top: 2px; }
+    .mnu__cat {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--copper-dark); background: rgba(198,123,78,0.12);
+      border-radius: 999px; padding: 4px 10px; white-space: nowrap;
+      justify-self: start;
+    }
+    body.dark .mnu__cat { color: var(--copper); }
+
+    .mnu__price { text-align: right; cursor: pointer; border: 0; background: none; padding: 0;
+      font-family: var(--font-head); font-weight: 700; font-size: 1rem; color: var(--roast);
+      border-bottom: 1.5px dashed transparent; transition: all 0.2s var(--ease); white-space: nowrap; }
+    body.dark .mnu__price { color: var(--steam); }
+    .mnu__price:hover { border-bottom-color: var(--copper); color: var(--copper-dark); }
+    body.dark .mnu__price:hover { color: var(--copper); }
+    .mnu__price-input {
+      width: 84px; text-align: right;
+      background: var(--steam); border: 1.5px solid var(--copper);
+      border-radius: 8px; padding: 6px 8px;
+      font-family: var(--font-head); font-weight: 700; font-size: 1rem; color: var(--roast);
+      box-shadow: var(--shadow-glow);
+    }
+    body.dark .mnu__price-input { background: rgba(255,255,255,0.06); color: var(--steam); }
+    .mnu__price-input:focus { outline: none; }
+    .mnu__price-hint { display: block; color: var(--muted); font-size: 0.62rem; font-family: var(--font-body); font-weight: 500; }
+
+    /* Sold-out switch */
+    .mnu__sold { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .mnu__sold-label { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+    .switch { position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch__slider {
+      position: absolute; inset: 0; border-radius: 999px;
+      background: rgba(122,91,77,0.3); transition: background 0.2s var(--ease);
+    }
+    .switch__slider::before {
+      content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px;
+      border-radius: 50%; background: var(--steam);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s var(--ease);
+    }
+    .switch input:checked + .switch__slider { background: var(--copper); }
+    .switch input:checked + .switch__slider::before { transform: translateX(18px); }
+
+    .mnu__flags { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .mnu__edited { font-size: 0.62rem; color: var(--copper-dark); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .mnu__edited[hidden] { display: none; }
+    body.dark .mnu__edited { color: var(--copper); }
+    .mnu__reset { font-size: 0.68rem; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 2px 0; }
+    .mnu__reset:hover { color: #c0392b; }
+
+    .mnu__cat-badge { font-size: 0.7rem; font-weight: 600; color: var(--muted); }
+
+    /* ---------- Sales summary (Task G) ---------- */
+    .sales__body { display: flex; flex-direction: column; gap: 18px; }
+
+    .sales__cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .sales__card {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 18px 20px;
+      background: color-mix(in srgb, var(--bg) 72%, transparent);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      position: relative; overflow: hidden;
+      transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+    }
+    .sales__card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .sales__card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--copper);
+    }
+    .sales__card--primary::before { background: var(--copper); }
+    .sales__card--neutral::before { background: rgba(122,91,77,0.6); }
+    .sales__card--paid::before    { background: #4c9a5f; }
+    .sales__card--unpaid::before  { background: var(--copper-dark); }
+
+    .sales__card-label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .sales__card-value {
+      font-family: var(--font-head); font-size: 1.85rem; font-weight: 700; line-height: 1.1;
+      color: var(--roast);
+    }
+    body.dark .sales__card-value { color: var(--steam); }
+    .sales__card--primary .sales__card-value { color: var(--copper-dark); }
+    body.dark .sales__card--primary .sales__card-value { color: var(--copper); }
+    .sales__card-hint { font-size: 0.78rem; color: var(--muted); }
+
+    .sales__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .sales__panel {
+      background: color-mix(in srgb, var(--bg) 72%, transparent);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 18px 20px;
+      min-width: 0;
+    }
+    .sales__panel-head { margin-bottom: 12px; }
+    .sales__panel-title {
+      font-family: var(--font-head); font-size: 1.05rem; font-weight: 600;
+      color: var(--roast); margin: 0 0 2px;
+    }
+    body.dark .sales__panel-title { color: var(--steam); }
+    .sales__panel-sub { font-size: 0.76rem; color: var(--muted); margin: 0; }
+
+    .sales__table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .sales__table th, .sales__table td {
+      text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line);
+    }
+    .sales__table th {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .sales__table tbody tr:last-child td { border-bottom: 0; }
+    .sales__table tbody tr:hover { background: rgba(198,123,78,0.05); }
+    .sales__num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .sales__rank { width: 28px; color: var(--copper-dark); font-weight: 700; font-family: var(--font-head); }
+    body.dark .sales__rank { color: var(--copper); }
+    .sales__share {
+      display: inline-block; margin-left: 6px;
+      font-size: 0.7rem; color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .sales__empty { text-align: center; color: var(--muted); padding: 18px 8px !important; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 760px) {
+      .adm { grid-template-columns: 1fr; }
+      .adm__side { position: static; height: auto; }
+      .adm__nav { flex-direction: row; flex-wrap: wrap; }
+      .adm__demo { display: none; }
+      .adm__link { width: auto; flex: 1; justify-content: center; padding: 10px 8px; }
+      .adm__topbar { padding: 14px 16px; }
+      .adm__panel { padding: 18px 16px 32px; }
+      .orders__row { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .orders__items { grid-column: 1 / -1; }
+      .orders__right { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; text-align: left; }
+      .mnu__row { grid-template-columns: 48px 1fr auto auto; gap: 10px; }
+      .mnu__thumb { width: 48px; height: 48px; }
+      .mnu__cat { display: none; }
+      .mnu__flags { grid-column: 2 / -1; flex-direction: row; align-items: center; }
+      .sales__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sales__grid { grid-template-columns: 1fr; }
+      .sales__card-value { font-size: 1.55rem; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="adm">
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="adm__side" aria-label="Admin sidebar">
+      <a class="adm__brand" href="../index.html" aria-label="Back to Ember and Oak website">
+        <span class="adm__brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 18c0-5 4-9 10-9s10 4 10 9v3H6v-3z"/>
+            <path d="M26 18a3 3 0 0 1 0 6h-1"/>
+            <path d="M10 4c0 2 2 2 2 4M16 3c0 2 2 2 2 4M22 4c0 2 2 2 2 4"/>
+          </svg>
+        </span>
+        <span>
+          <span class="adm__brand-name">Ember &amp; Oak</span>
+          <span class="adm__brand-sub" style="display:block;">Coffee Admin</span>
+        </span>
+      </a>
+
+      <nav class="adm__nav" aria-label="Admin sections">
+        <button type="button" class="adm__link is-active" data-tab="orders" aria-selected="true" aria-controls="tab-orders">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Live Orders
+        </button>
+        <button type="button" class="adm__link" data-tab="menu" aria-selected="false" aria-controls="tab-menu">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 7h18M3 12h18M3 17h12"/>
+          </svg>
+          Menu Manager
+        </button>
+        <button type="button" class="adm__link" data-tab="sales" aria-selected="false" aria-controls="tab-sales">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          Sales Summary
+        </button>
+      </nav>
+
+      <div class="adm__demo">
+        <strong>Demo build</strong> — frontend only, sample data. Phase 1.2 in progress.
+      </div>
+    </aside>
+
+    <!-- ===== MAIN ===== -->
+    <div class="adm__main">
+      <header class="adm__topbar">
+        <div>
+          <p class="adm__crumb">Ember &amp; Oak · Coffee Admin</p>
+          <h1 class="adm__title" id="admTitle">Live Orders</h1>
+        </div>
+        <div class="adm__top-actions">
+          <button type="button" class="adm__logout" id="admLogout" data-action="admin-logout">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Log out
+          </button>
+        </div>
+      </header>
+
+      <main class="adm__content">
+        <!-- Tab: Live Orders -->
+        <section class="adm__panel is-active" id="tab-orders" role="tabpanel" aria-label="Live Orders">
+          <div class="orders" id="ordersPane">
+            <div class="orders__toolbar">
+              <p class="orders__meta" id="ordersMeta">—</p>
+              <div class="orders__toolbar-actions">
+                <span class="seed-chip" id="seedChip" hidden>showing sample data</span>
+                <button type="button" class="adm__refresh" id="ordersRefresh" data-action="refresh-orders" aria-label="Refresh orders">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+            </div>
+            <div class="orders__list" id="ordersList"></div>
+          </div>
+        </section>
+
+        <!-- Tab: Menu Manager -->
+        <section class="adm__panel" id="tab-menu" role="tabpanel" aria-label="Menu Manager" hidden>
+          <div class="mnu" id="menPane">
+            <div class="mnu__toolbar">
+              <p class="mnu__meta" id="menMeta">—</p>
+              <div class="mnu__toolbar-actions">
+                <button type="button" class="adm__mini adm__mini--reopen" data-action="menu-reset-all">Reset all overrides</button>
+              </div>
+            </div>
+            <div class="mnu__list" id="menuList"></div>
+          </div>
+        </section>
+
+        <!-- Tab: Sales Summary -->
+        <section class="adm__panel" id="tab-sales" role="tabpanel" aria-label="Sales Summary" hidden>
+          <div class="sales">
+            <div class="orders__toolbar">
+              <p class="orders__meta" id="salesMeta">—</p>
+              <div class="orders__toolbar-actions">
+                <span class="seed-chip" id="salesSeedChip" hidden>showing sample data</span>
+                <button type="button" class="adm__refresh" id="salesRefresh" data-action="refresh-orders" aria-label="Refresh sales">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+            </div>
+            <div class="sales__body" id="salesPane"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="../data.js"></script>
+  <script src="data.js"></script>
+  <script src="dashboard.js"></script>
+  <script>
+    (function () {
+      const SESSION_KEY = 'emberOakAdminSession';
+
+      // Guard: no session? back to the login page.
+      if (!localStorage.getItem(SESSION_KEY)) {
+        window.location.replace('login.html');
+        return;
+      }
+
+      const TITLES = { orders: 'Live Orders', menu: 'Menu Manager', sales: 'Sales Summary' };
+      const titleEl = document.getElementById('admTitle');
+      const tabs = Array.from(document.querySelectorAll('.adm__link[data-tab]'));
+      const panels = Array.from(document.querySelectorAll('.adm__panel'));
+
+      function activate(name) {
+        tabs.forEach(t => {
+          const active = t.dataset.tab === name;
+          t.classList.toggle('is-active', active);
+          t.setAttribute('aria-selected', String(active));
+        });
+        panels.forEach(p => {
+          const active = p.id === 'tab-' + name;
+          p.classList.toggle('is-active', active);
+          p.hidden = !active;
+        });
+        if (titleEl) titleEl.textContent = TITLES[name] || 'Dashboard';
+      }
+
+      tabs.forEach(t => {
+        t.addEventListener('click', () => activate(t.dataset.tab));
+      });
+
+      // Log out
+      document.getElementById('admLogout')?.addEventListener('click', () => {
+        localStorage.removeItem(SESSION_KEY);
+        window.location.replace('login.html');
+      });
+
+      // Link back to brand -> site (kept as <a>, no JS needed)
+    })();
+  </script>
+</body>
+</html>

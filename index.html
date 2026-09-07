@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Ember & Oak Coffee — a cozy Third Wave coffee house serving single-origin coffee, specialty drinks, and homemade pastries." />
+  <title>Ember & Oak Coffee — Brewed with Intention</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Decorative grain texture overlay -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- ===== NAVIGATION ===== -->
+  <header class="nav" id="nav">
+    <div class="nav__inner container">
+      <a href="#home" class="nav__logo" aria-label="Ember and Oak Coffee home">
+        <span class="logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 18c0-5 4-9 10-9s10 4 10 9v3H6v-3z"/>
+            <path d="M26 18a3 3 0 0 1 0 6h-1"/>
+            <path d="M10 4c0 2 2 2 2 4M16 3c0 2 2 2 2 4M22 4c0 2 2 2 2 4"/>
+          </svg>
+        </span>
+        <span class="logo-text">Ember &amp; Oak</span>
+      </a>
+
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#home" class="nav__link">Home</a>
+        <a href="#about" class="nav__link">About</a>
+        <a href="#menu" class="nav__link">Menu</a>
+        <a href="#contact" class="nav__link">Contact</a>
+      </nav>
+
+      <div class="nav__actions">
+        <button class="nav__cart" id="navCart" type="button" data-action="open-cart" aria-label="Open cart">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span class="nav__cart-count" id="navCartCount">0</span>
+        </button>
+        <button class="btn btn--ghost nav__login" id="navLogin" type="button">Login</button>
+        <a href="#menu" class="btn btn--primary nav__cta">Order Now</a>
+      </div>
+
+      <button class="nav__burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+      <a href="#home" class="mobile-menu__link">Home</a>
+      <a href="#about" class="mobile-menu__link">About</a>
+      <a href="#menu" class="mobile-menu__link">Menu</a>
+      <a href="#contact" class="mobile-menu__link">Contact</a>
+      <button type="button" class="btn btn--ghost mobile-menu__login" id="mobileLogin">Login</button>
+      <button type="button" class="btn btn--primary mobile-menu__cart" id="mobileCart">View Cart</button>
+    </div>
+  </header>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="home">
+    <div class="hero__bg" id="heroBg"></div>
+    <div class="hero__overlay"></div>
+
+    <div class="hero__content container">
+      <p class="eyebrow reveal" data-stagger="0">— Small batch. Slow brewed. —</p>
+      <h1 class="hero__title reveal" data-stagger="1">
+        Coffee that feels<br />
+        <em>like coming home.</em>
+      </h1>
+      <p class="hero__sub reveal" data-stagger="2">
+        Single-origin beans roasted in-house, pastries baked at dawn,
+        and a corner seat with your name on it.
+      </p>
+      <div class="hero__ctas reveal" data-stagger="3">
+        <a href="#menu" class="btn btn--primary btn--lg">Explore the Menu</a>
+        <a href="#visit" class="btn btn--ghost btn--lg">Find Us</a>
+      </div>
+
+      <div class="hero__chips reveal" data-stagger="4">
+        <span class="chip"><span class="dot"></span>Open today · 7am – 8pm</span>
+        <span class="chip">★ 4.9 · 320+ reviews</span>
+        <span class="chip">Plant-based milks free</span>
+      </div>
+    </div>
+
+    <a href="#menu" class="hero__scroll" aria-label="Scroll to menu">
+      <span>Scroll</span>
+      <span class="line" aria-hidden="true"></span>
+    </a>
+  </section>
+
+  <!-- ===== STORY STRIP ===== -->
+  <section class="strip">
+    <div class="container strip__inner">
+      <div class="strip__item reveal">
+        <span class="strip__num">12+</span>
+        <span class="strip__label">Years roasting</span>
+      </div>
+      <div class="strip__item reveal">
+        <span class="strip__num">8</span>
+        <span class="strip__label">Single-origin farms</span>
+      </div>
+      <div class="strip__item reveal">
+        <span class="strip__num">100%</span>
+        <span class="strip__label">Ethically sourced</span>
+      </div>
+      <div class="strip__item reveal">
+        <span class="strip__num">4.9</span>
+        <span class="strip__label">Average rating</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT ===== -->
+  <section class="section about" id="about">
+    <div class="container">
+      <header class="section__head reveal">
+        <p class="eyebrow" data-about-eyebrow>— Our Story —</p>
+        <h2 class="section__title" data-about-title>A small cafe with<br /><em>big standards.</em></h2>
+      </header>
+
+      <div class="about__grid">
+        <div class="about__copy reveal" data-about-copy>
+          <!-- paragraphs injected from data.js -->
+        </div>
+
+        <div class="about__values reveal" data-about-values>
+          <!-- value cards injected from data.js -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MENU ===== -->
+  <section class="section menu" id="menu">
+    <div class="container">
+      <header class="section__head reveal">
+        <p class="eyebrow">— Our Menu —</p>
+        <h2 class="section__title">Crafted with care,<br /><em>served warm.</em></h2>
+        <p class="section__sub">
+          From pour-overs pulled by hand to flaky morning pastries —
+          every item on our menu is made from scratch, every single day.
+        </p>
+      </header>
+
+      <div class="menu__filters reveal" role="tablist" aria-label="Menu categories">
+        <button class="filter is-active" data-filter="all" role="tab" aria-selected="true">Everything</button>
+        <button class="filter" data-filter="coffee" role="tab" aria-selected="false">Coffee</button>
+        <button class="filter" data-filter="specialty" role="tab" aria-selected="false">Specialty</button>
+        <button class="filter" data-filter="food" role="tab" aria-selected="false">Food</button>
+      </div>
+
+      <div class="menu__grid" id="menuGrid">
+        <!-- Menu cards are rendered from data.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STORES ===== -->
+  <section class="section stores" id="stores">
+    <div class="container">
+      <header class="section__head reveal">
+        <p class="eyebrow">— Four Locations —</p>
+        <h2 class="section__title">Find your nearest<br /><em>corner.</em></h2>
+        <p class="section__sub">
+          Four neighborhood cafes, each with its own character — but the same beans, the same recipes, and the same warm hello at the door.
+        </p>
+      </header>
+
+      <!-- Auto-rotating showcase -->
+      <div class="stores__showcase reveal" id="storesShowcase">
+        <div class="stores__track" id="storesTrack"></div>
+
+        <button class="stores__nav stores__nav--prev" id="storePrev" aria-label="Previous store">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="stores__nav stores__nav--next" id="storeNext" aria-label="Next store">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+        <div class="stores__caption" id="storeCaption">
+          <span class="stores__caption-tag" id="storeTag">Inner SE</span>
+          <h3 class="stores__caption-title" id="storeTitle">Maple Street</h3>
+          <p class="stores__caption-addr" id="storeAddr">247 Maple St, Portland, OR 97214</p>
+        </div>
+
+        <div class="stores__dots" id="storeDots" role="tablist" aria-label="Store slides"></div>
+      </div>
+
+      <!-- All stores grid -->
+      <div class="stores__grid" id="storesGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===== REVIEWS ===== -->
+  <section class="section reviews" id="reviews">
+    <div class="container">
+      <header class="section__head reveal">
+        <p class="eyebrow">— Kind Words —</p>
+        <h2 class="section__title">From our regulars.</h2>
+      </header>
+
+      <div class="reviews__viewport reveal">
+        <button class="reviews__nav reviews__nav--prev" id="revPrev" aria-label="Previous review">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+
+        <div class="reviews__track" id="revTrack">
+          <!-- Reviews are rendered from data.js -->
+        </div>
+
+        <button class="reviews__nav reviews__nav--next" id="revNext" aria-label="Next review">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <div class="reviews__dots" id="revDots" role="tablist" aria-label="Review slides"></div>
+    </div>
+  </section>
+
+  <!-- ===== VISIT / ADDRESS ===== -->
+  <section class="section visit" id="visit">
+    <div class="container visit__grid">
+      <div class="visit__copy reveal">
+        <p class="eyebrow">— Visit Us —</p>
+        <h2 class="section__title">Find your corner.</h2>
+        <p class="section__sub">
+          Tucked between the bookstore and the old oak on Maple Street.
+          Free wifi, plenty of outlets, and a window seat if you ask nicely.
+        </p>
+
+        <ul class="info-list">
+          <li>
+            <span class="info-list__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
+            <div>
+              <strong>Address</strong>
+              <span>247 Maple Street, Portland, OR 97214</span>
+            </div>
+          </li>
+          <li>
+            <span class="info-list__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </span>
+            <div>
+              <strong>Hours</strong>
+              <span>Mon – Fri · 7am – 8pm</span>
+              <span>Sat – Sun · 8am – 9pm</span>
+            </div>
+          </li>
+          <li>
+            <span class="info-list__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </span>
+            <div>
+              <strong>Phone</strong>
+              <a href="tel:+15035550147">(503) 555-0147</a>
+            </div>
+          </li>
+          <li>
+            <span class="info-list__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </span>
+            <div>
+              <strong>Email</strong>
+              <a href="mailto:hello@emberandoak.coffee">hello@emberandoak.coffee</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="visit__map reveal" aria-label="Map showing 247 Maple Street, Portland">
+        <iframe
+          title="Ember and Oak Coffee location"
+          src="https://www.openstreetmap.org/export/embed.html?bbox=-122.6644%2C45.5119%2C-122.6244%2C45.5319&layer=mapnik&marker=45.5219%2C-122.6444"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <div class="map__pin" aria-hidden="true">
+          <span class="map__pulse"></span>
+          <span class="map__dot"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONTACT ===== -->
+  <section class="section contact" id="contact">
+    <div class="container contact__inner">
+      <div class="contact__copy reveal">
+        <p class="eyebrow">— Say Hello —</p>
+        <h2 class="section__title">Drop us a line.</h2>
+        <p class="section__sub">
+          Catering, private events, wholesale beans, or just a quick hello —
+          we'd love to hear from you.
+        </p>
+        <p class="contact__note">We typically reply within a few hours.</p>
+      </div>
+
+      <form class="contact__form card reveal" id="contactForm" novalidate>
+        <div class="field">
+          <label for="name">Your name</label>
+          <input type="text" id="name" name="name" placeholder="Jane Doe" required minlength="2" />
+          <span class="field__err" data-err="name"></span>
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="jane@example.com" required />
+          <span class="field__err" data-err="email"></span>
+        </div>
+
+        <div class="field">
+          <label for="topic">What's it about?</label>
+          <select id="topic" name="topic" required>
+            <option value="" disabled selected>Pick one…</option>
+            <option>Just saying hi</option>
+            <option>Catering inquiry</option>
+            <option>Private event</option>
+            <option>Wholesale beans</option>
+            <option>Press / collaboration</option>
+          </select>
+          <span class="field__err" data-err="topic"></span>
+        </div>
+
+        <div class="field">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="5" placeholder="Tell us a little about it…" required minlength="10"></textarea>
+          <span class="field__err" data-err="message"></span>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--lg btn--block" id="submitBtn">
+          <span class="btn__label">Send message</span>
+          <span class="btn__spinner" aria-hidden="true"></span>
+        </button>
+
+        <p class="form__success" id="formSuccess" hidden>
+          ✓ Thanks! Your message is on its way. We'll be in touch soon.
+        </p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <span class="logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 18c0-5 4-9 10-9s10 4 10 9v3H6v-3z"/>
+            <path d="M26 18a3 3 0 0 1 0 6h-1"/>
+            <path d="M10 4c0 2 2 2 2 4M16 3c0 2 2 2 2 4M22 4c0 2 2 2 2 4"/>
+          </svg>
+        </span>
+        <span>Ember &amp; Oak Coffee</span>
+      </div>
+      <p class="footer__tag">Brewed with intention · Portland, OR</p>
+      <div class="footer__socials" aria-label="Social links">
+        <a href="#" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </a>
+        <a href="#" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a href="#" aria-label="TikTok">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+        </a>
+      </div>
+      <p class="footer__copy">© 2026 Ember &amp; Oak. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Back to top -->
+  <button class="to-top" id="toTop" aria-label="Back to top">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
+  <!-- ===== ITEM MODAL ===== -->
+  <div class="modal" id="itemModal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__dialog" role="document">
+      <button class="modal__close" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+
+      <!-- Step 1: Detail + store picker -->
+      <div class="modal__step modal__step--detail is-active" data-step="detail">
+        <div class="modal__media">
+          <img id="modalImg" src="" alt="" />
+        </div>
+        <div class="modal__info">
+          <p class="eyebrow" id="modalCategory">— From the menu —</p>
+          <h2 class="modal__title" id="modalTitle">Item name</h2>
+          <p class="modal__price" id="modalPrice">$0.00</p>
+          <p class="modal__desc" id="modalDesc">Description goes here.</p>
+
+          <div class="modal__divider"></div>
+
+          <h3 class="modal__sub">Choose pickup location</h3>
+          <div class="store-picker" id="storePicker"></div>
+          <p class="modal__hint" id="storeHint">Pick a store to continue.</p>
+
+          <div class="modal__actions">
+            <button class="btn btn--primary btn--lg btn--block" id="modalContinue" disabled>
+              Continue to payment
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Pay with QR -->
+      <div class="modal__step modal__step--pay" data-step="pay">
+        <div class="modal__pay-grid">
+          <div class="modal__qr">
+            <div class="qr-placeholder" id="qrPlaceholder" aria-label="Payment QR code, coming soon">
+              <svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect width="200" height="200" fill="#fff"/>
+                <!-- corner finder squares -->
+                <g fill="#2C1810">
+                  <rect x="10" y="10" width="50" height="50" rx="6"/>
+                  <rect x="20" y="20" width="30" height="30" rx="3" fill="#fff"/>
+                  <rect x="27" y="27" width="16" height="16" rx="2"/>
+                  <rect x="140" y="10" width="50" height="50" rx="6"/>
+                  <rect x="150" y="20" width="30" height="30" rx="3" fill="#fff"/>
+                  <rect x="157" y="27" width="16" height="16" rx="2"/>
+                  <rect x="10" y="140" width="50" height="50" rx="6"/>
+                  <rect x="20" y="150" width="30" height="30" rx="3" fill="#fff"/>
+                  <rect x="27" y="157" width="16" height="16" rx="2"/>
+                </g>
+                <!-- pseudo-random data pattern -->
+                <g fill="#2C1810">
+                  <rect x="70" y="10" width="6" height="6"/><rect x="80" y="10" width="6" height="6"/><rect x="100" y="10" width="6" height="6"/><rect x="120" y="10" width="6" height="6"/>
+                  <rect x="70" y="22" width="6" height="6"/><rect x="90" y="22" width="6" height="6"/><rect x="110" y="22" width="6" height="6"/><rect x="130" y="22" width="6" height="6"/>
+                  <rect x="70" y="34" width="6" height="6"/><rect x="80" y="34" width="6" height="6"/><rect x="100" y="34" width="6" height="6"/><rect x="120" y="34" width="6" height="6"/><rect x="130" y="34" width="6" height="6"/>
+                  <rect x="80" y="46" width="6" height="6"/><rect x="90" y="46" width="6" height="6"/><rect x="110" y="46" width="6" height="6"/>
+                  <rect x="10" y="70" width="6" height="6"/><rect x="30" y="70" width="6" height="6"/><rect x="50" y="70" width="6" height="6"/><rect x="70" y="70" width="6" height="6"/><rect x="90" y="70" width="6" height="6"/><rect x="110" y="70" width="6" height="6"/><rect x="130" y="70" width="6" height="6"/><rect x="150" y="70" width="6" height="6"/><rect x="170" y="70" width="6" height="6"/><rect x="190" y="70" width="6" height="6"/>
+                  <rect x="20" y="82" width="6" height="6"/><rect x="40" y="82" width="6" height="6"/><rect x="60" y="82" width="6" height="6"/><rect x="80" y="82" width="6" height="6"/><rect x="100" y="82" width="6" height="6"/><rect x="120" y="82" width="6" height="6"/><rect x="140" y="82" width="6" height="6"/><rect x="160" y="82" width="6" height="6"/><rect x="180" y="82" width="6" height="6"/>
+                  <rect x="10" y="94" width="6" height="6"/><rect x="30" y="94" width="6" height="6"/><rect x="50" y="94" width="6" height="6"/><rect x="70" y="94" width="6" height="6"/><rect x="90" y="94" width="6" height="6"/><rect x="110" y="94" width="6" height="6"/><rect x="130" y="94" width="6" height="6"/><rect x="150" y="94" width="6" height="6"/><rect x="170" y="94" width="6" height="6"/><rect x="190" y="94" width="6" height="6"/>
+                  <rect x="20" y="106" width="6" height="6"/><rect x="40" y="106" width="6" height="6"/><rect x="60" y="106" width="6" height="6"/><rect x="80" y="106" width="6" height="6"/><rect x="100" y="106" width="6" height="6"/><rect x="120" y="106" width="6" height="6"/><rect x="140" y="106" width="6" height="6"/><rect x="160" y="106" width="6" height="6"/><rect x="180" y="106" width="6" height="6"/>
+                  <rect x="10" y="118" width="6" height="6"/><rect x="30" y="118" width="6" height="6"/><rect x="50" y="118" width="6" height="6"/><rect x="70" y="118" width="6" height="6"/><rect x="90" y="118" width="6" height="6"/><rect x="110" y="118" width="6" height="6"/><rect x="130" y="118" width="6" height="6"/><rect x="150" y="118" width="6" height="6"/><rect x="170" y="118" width="6" height="6"/><rect x="190" y="118" width="6" height="6"/>
+                  <rect x="70" y="130" width="6" height="6"/><rect x="80" y="130" width="6" height="6"/><rect x="100" y="130" width="6" height="6"/><rect x="120" y="130" width="6" height="6"/>
+                  <rect x="70" y="142" width="6" height="6"/><rect x="90" y="142" width="6" height="6"/><rect x="110" y="142" width="6" height="6"/><rect x="130" y="142" width="6" height="6"/>
+                  <rect x="70" y="154" width="6" height="6"/><rect x="80" y="154" width="6" height="6"/><rect x="100" y="154" width="6" height="6"/><rect x="120" y="154" width="6" height="6"/><rect x="130" y="154" width="6" height="6"/>
+                  <rect x="80" y="166" width="6" height="6"/><rect x="90" y="166" width="6" height="6"/><rect x="110" y="166" width="6" height="6"/>
+                  <rect x="80" y="178" width="6" height="6"/><rect x="100" y="178" width="6" height="6"/><rect x="120" y="178" width="6" height="6"/>
+                </g>
+                <!-- center "Coming Soon" badge -->
+                <circle cx="100" cy="100" r="28" fill="#F5F0E8" stroke="#C67B4E" stroke-width="3"/>
+                <text x="100" y="96" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="8" font-weight="700" fill="#2C1810">SOON</text>
+                <text x="100" y="108" text-anchor="middle" font-family="Caveat, cursive" font-size="13" fill="#C67B4E">QR Pay</text>
+              </svg>
+            </div>
+            <p class="qr-caption">Scan to pay · <strong>Coming Soon</strong></p>
+          </div>
+
+          <div class="modal__pay-info">
+            <p class="eyebrow">— Almost there —</p>
+            <h2 class="modal__title" id="payItemName">Item</h2>
+            <p class="modal__pay-sub">at <strong id="payStoreName">store</strong></p>
+
+            <ul class="pay-summary">
+              <li><span>Item</span><strong id="payItemLabel">—</strong></li>
+              <li><span>Pickup at</span><strong id="payStoreAddr">—</strong></li>
+              <li class="pay-summary__total"><span>Total</span><strong id="payTotal">$0.00</strong></li>
+            </ul>
+
+            <p class="pay-note">
+              📱 QR payments are rolling out to all locations soon.
+              We'll email you the moment yours is ready.
+            </p>
+
+            <div class="modal__actions modal__actions--row">
+              <button class="btn btn--ghost" id="payBack">← Back</button>
+              <button class="btn btn--primary" id="payDone" data-close>Done</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CART DRAWER ===== -->
+  <div class="cart-drawer__backdrop" id="cartBackdrop" data-action="close-cart" hidden></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-hidden="true" role="dialog" aria-labelledby="cartTitle">
+    <div class="cart-drawer__head">
+      <h2 class="cart-drawer__title" id="cartTitle">Your cart</h2>
+      <button class="cart-drawer__close" type="button" data-action="close-cart" aria-label="Close cart">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="cart-drawer__body" id="cartBody">
+      <!-- Cart lines or empty state injected by script.js -->
+    </div>
+    <div class="cart-drawer__foot" id="cartFoot" hidden>
+      <div class="cart-drawer__row">
+        <span>Subtotal</span>
+        <strong id="cartSubtotal">$0.00</strong>
+      </div>
+      <p class="cart-drawer__note">Taxes and pickup time calculated at the counter.</p>
+      <button class="btn btn--primary btn--lg btn--block" type="button" data-action="open-checkout">Checkout</button>
+    </div>
+  </aside>
+
+  <!-- ===== CHECKOUT MODAL ===== -->
+  <div class="modal" id="checkoutModal" hidden role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+    <div class="modal__backdrop" data-action="close-checkout"></div>
+    <div class="modal__dialog checkout" role="document">
+      <button class="modal__close" type="button" data-action="close-checkout" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+
+      <div class="checkout__step checkout__step--form is-active" data-step="form">
+        <p class="eyebrow">— Checkout —</p>
+        <h2 class="checkout__title" id="checkoutTitle">A few details</h2>
+        <p class="checkout__sub">Your order will be ready in about 15–20 minutes.</p>
+
+        <form class="form" id="checkoutForm" novalidate>
+          <div class="form__group">
+            <label for="co-name">Name</label>
+            <input type="text" id="co-name" name="name" placeholder="Jane Doe" autocomplete="name" required minlength="2" />
+            <span class="form__error" data-error-for="name"></span>
+          </div>
+
+          <div class="form__group">
+            <label for="co-phone">Phone</label>
+            <input type="tel" id="co-phone" name="phone" placeholder="(555) 123-4567" autocomplete="tel" required />
+            <span class="form__error" data-error-for="phone"></span>
+          </div>
+
+          <div class="form__group">
+            <label for="co-address">Pickup address</label>
+            <input type="text" id="co-address" name="address" placeholder="123 Main St" autocomplete="street-address" required minlength="5" />
+            <span class="form__error" data-error-for="address"></span>
+          </div>
+
+          <div class="form__group form__group--row">
+            <div class="form__group">
+              <label for="co-store">Store</label>
+              <select id="co-store" name="store" required></select>
+              <span class="form__error" data-error-for="store"></span>
+            </div>
+            <div class="form__group">
+              <label for="co-when">When</label>
+              <select id="co-when" name="when" required>
+                <option value="asap">As soon as it's ready</option>
+                <option value="15">In 15 minutes</option>
+                <option value="30">In 30 minutes</option>
+                <option value="45">In 45 minutes</option>
+                <option value="60">In 1 hour</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form__group">
+            <label for="co-notes">Notes <span class="form__opt">(optional)</span></label>
+            <textarea id="co-notes" name="notes" rows="2" placeholder="Extra foam, less sugar, etc."></textarea>
+          </div>
+
+          <div class="checkout__summary">
+            <div class="checkout__summary-row">
+              <span>Items</span>
+              <strong id="co-item-count">0</strong>
+            </div>
+            <div class="checkout__summary-row">
+              <span>Total</span>
+              <strong id="co-total">$0.00</strong>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--lg btn--block" id="co-submit">
+            <span class="btn__label">Place order</span>
+            <span class="btn__spinner" aria-hidden="true"></span>
+          </button>
+          <p class="form__legal">Demo only — no real order is placed.</p>
+        </form>
+      </div>
+
+      <div class="checkout__step checkout__step--success" data-step="success">
+        <div class="success__check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2 class="checkout__title">Order placed</h2>
+        <p class="checkout__sub">Thanks! Your order <strong id="co-order-id">EO-0000</strong> is being prepared.</p>
+        <p class="checkout__sub checkout__sub--muted">Pickup at <strong id="co-pickup-store">—</strong> · <span id="co-pickup-when">—</span></p>
+
+        <div class="checkout__actions">
+          <button class="btn btn--primary btn--lg" type="button" data-action="close-checkout-and-continue">Keep browsing</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AUTH MODAL (login / signup, demo only) ===== -->
+  <div class="auth-modal" id="authModal" hidden role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="modal__backdrop" data-action="close-auth"></div>
+    <div class="modal__dialog auth" role="document">
+      <button class="modal__close" type="button" data-action="close-auth" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+
+      <div class="auth__tabs" role="tablist">
+        <button class="auth__tab is-active" type="button" data-auth-action="show-login" role="tab" aria-selected="true">Login</button>
+        <button class="auth__tab" type="button" data-auth-action="show-signup" role="tab" aria-selected="false">Sign up</button>
+      </div>
+
+      <div class="auth__panes">
+        <!-- Login pane -->
+        <div class="auth__pane is-active" data-auth-pane="login">
+          <p class="eyebrow">— Welcome back —</p>
+          <h2 class="auth__title" id="authTitle">Log in to your account</h2>
+          <p class="checkout__sub">Demo only — no real account is created or stored.</p>
+
+          <form class="form" id="loginForm" novalidate>
+            <div class="form__group">
+              <label for="login-email">Email</label>
+              <input type="email" id="login-email" name="email" placeholder="you@example.com" autocomplete="email" required />
+              <span class="form__error" data-error-for="email"></span>
+            </div>
+            <div class="form__group">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+              <span class="form__error" data-error-for="password"></span>
+            </div>
+            <button type="submit" class="btn btn--primary btn--lg btn--block">Log in</button>
+            <p class="form__legal">This is a UI mock. Real auth arrives with the database (Phase 2).</p>
+          </form>
+        </div>
+
+        <!-- Signup pane -->
+        <div class="auth__pane" data-auth-pane="signup">
+          <p class="eyebrow">— Join us —</p>
+          <h2 class="auth__title">Create an account</h2>
+          <p class="checkout__sub">Demo only — no real account is created or stored.</p>
+
+          <form class="form" id="signupForm" novalidate>
+            <div class="form__group">
+              <label for="signup-name">Name</label>
+              <input type="text" id="signup-name" name="name" placeholder="Jane Doe" autocomplete="name" required minlength="2" />
+              <span class="form__error" data-error-for="name"></span>
+            </div>
+            <div class="form__group">
+              <label for="signup-email">Email</label>
+              <input type="email" id="signup-email" name="email" placeholder="you@example.com" autocomplete="email" required />
+              <span class="form__error" data-error-for="email"></span>
+            </div>
+            <div class="form__group">
+              <label for="signup-password">Password</label>
+              <input type="password" id="signup-password" name="password" placeholder="8+ characters" autocomplete="new-password" required minlength="8" />
+              <span class="form__error" data-error-for="password"></span>
+            </div>
+            <button type="submit" class="btn btn--primary btn--lg btn--block">Create account</button>
+            <p class="form__legal">This is a UI mock. Real auth arrives with the database (Phase 2).</p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

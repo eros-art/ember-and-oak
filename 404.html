@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Page not found — Ember &amp; Oak Coffee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .nf {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 48px;
+    }
+    .nf__cup {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 84px;
+      height: 84px;
+      margin-bottom: 8px;
+      border-radius: 50%;
+      background: var(--copper);
+      color: var(--steam);
+      box-shadow: 0 8px 20px rgba(198, 123, 78, 0.35);
+    }
+    .nf__code {
+      font-family: var(--font-head);
+      font-size: clamp(4.5rem, 14vw, 8rem);
+      line-height: 1;
+      color: var(--roast);
+      margin: 0;
+    }
+    body.dark .nf__code { color: var(--steam); }
+    .nf__title {
+      font-family: var(--font-head);
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      color: var(--copper);
+      margin: 4px 0 8px;
+    }
+    .nf__sub {
+      color: var(--muted);
+      max-width: 420px;
+      margin: 0 auto 28px;
+    }
+    .nf__actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .nf__steam {
+      font-family: var(--font-accent);
+      font-size: 1.6rem;
+      color: var(--copper);
+      display: block;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <div class="nav__inner container">
+      <a href="index.html" class="nav__logo" aria-label="Ember and Oak Coffee home">
+        <span class="logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 18c0-5 4-9 10-9s10 4 10 9v3H6v-3z"/>
+            <path d="M26 18a3 3 0 0 1 0 6h-1"/>
+            <path d="M10 4c0 2 2 2 2 4M16 3c0 2 2 2 2 4M22 4c0 2 2 2 2 4"/>
+          </svg>
+        </span>
+        <span class="logo-text">Ember &amp; Oak</span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="index.html" class="nav__link">Home</a>
+        <a href="index.html#about" class="nav__link">About</a>
+        <a href="index.html#menu" class="nav__link">Menu</a>
+        <a href="index.html#contact" class="nav__link">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="nf">
+    <div>
+      <span class="nf__cup" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 18c0-5 4-9 10-9s10 4 10 9v3H6v-3z"/>
+          <path d="M26 18a3 3 0 0 1 0 6h-1"/>
+          <path d="M10 4c0 2 2 2 2 4M16 3c0 2 2 2 2 4M22 4c0 2 2 2 2 4"/>
+        </svg>
+      </span>
+      <span class="nf__steam">This one's decaf.</span>
+      <h1 class="nf__code">404</h1>
+      <h2 class="nf__title">Page not found</h2>
+      <p class="nf__sub">Looks like this cup's already empty. The page you're looking for doesn't exist — but the good stuff is right this way.</p>
+      <div class="nf__actions">
+        <a href="index.html" class="btn btn--primary" data-action="go-home">Back to home</a>
+        <a href="index.html#menu" class="btn btn--ghost">Browse the menu</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <p class="footer__copy">© 2026 Ember &amp; Oak. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

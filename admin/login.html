@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Admin Login — Ember &amp; Oak Coffee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    .alo {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(198, 123, 78, 0.22), transparent 60%),
+        radial-gradient(900px 500px at 10% 110%, rgba(93, 58, 46, 0.45), transparent 55%),
+        var(--espresso);
+    }
+    body.dark .alo { background: #120a06; }
+
+    .alo__card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 44px 40px 36px;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn 0.35s var(--ease);
+      text-align: center;
+    }
+    .alo__mark {
+      width: 58px; height: 58px;
+      border-radius: 50%;
+      background: var(--copper);
+      color: var(--steam);
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 20px rgba(198, 123, 78, 0.4);
+    }
+    .alo__eyebrow {
+      font-family: var(--font-script);
+      font-size: 1.15rem;
+      color: var(--copper);
+      margin-bottom: 4px;
+    }
+    .alo__title {
+      font-family: var(--font-head);
+      font-size: 1.65rem;
+      color: var(--roast);
+      margin-bottom: 4px;
+    }
+    body.dark .alo__title { color: var(--steam); }
+    .alo__sub {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 28px;
+    }
+
+    .alo__form { text-align: left; display: flex; flex-direction: column; gap: 6px; }
+    .alo__form label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .alo__form input {
+      width: 100%;
+      background: var(--steam);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      font-family: var(--font-body);
+      font-size: 0.98rem;
+      color: var(--fg);
+      transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+      margin-bottom: 4px;
+    }
+    body.dark .alo__form input { background: rgba(255,255,255,0.06); }
+    .alo__form input:focus {
+      outline: none;
+      border-color: var(--copper);
+      box-shadow: var(--shadow-glow);
+    }
+    .alo__form.has-error input { border-color: #c0392b; }
+
+    .alo__error {
+      color: #c0392b;
+      font-size: 0.8rem;
+      min-height: 18px;
+      display: block;
+      margin-top: 2px;
+      margin-bottom: 8px;
+    }
+
+    .btn-cu { color: var(--steam); text-decoration: none; }
+
+    .alo__demo {
+      margin-top: 22px;
+      padding: 12px 14px;
+      background: var(--latte);
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: left;
+    }
+    body.dark .alo__demo { background: rgba(255,255,255,0.06); }
+    .alo__demo strong { color: var(--roast); }
+    body.dark .alo__demo strong { color: var(--steam); }
+    .alo__demo code {
+      background: rgba(198,123,78,0.15);
+      color: var(--copper-dark);
+      padding: 1px 7px;
+      border-radius: 6px;
+      font-family: 'DM Sans', ui-monospace, monospace;
+      font-weight: 700;
+    }
+
+    .alo__back {
+      display: inline-block;
+      margin-top: 18px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s var(--ease);
+    }
+    .alo__back:hover { color: var(--copper); }
+  </style>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <main class="alo">
+    <div class="alo__card" role="main" aria-labelledby="aloTitle">
+      <div class="alo__mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 18c0-5 4-9 10-9s10 4 10 9v3H6v-3z"/>
+          <path d="M26 18a3 3 0 0 1 0 6h-1"/>
+          <path d="M10 4c0 2 2 2 2 4M16 3c0 2 2 2 2 4M22 4c0 2 2 2 2 4"/>
+        </svg>
+      </div>
+      <p class="alo__eyebrow">Barista's only</p>
+      <h1 class="alo__title" id="aloTitle">Admin Login</h1>
+      <p class="alo__sub">Sign in to manage orders, the menu, and sales.</p>
+
+      <form class="alo__form" id="aloForm" novalidate>
+        <label for="aloPass">Password</label>
+        <input type="password" id="aloPass" name="password" autocomplete="current-password" placeholder="Enter admin password" />
+        <span class="alo__error" id="aloError" role="alert"></span>
+        <button type="submit" class="btn btn--primary" style="width:100%;justify-content:center;">Sign in</button>
+      </form>
+
+      <div class="alo__demo">
+        <strong>Demo only</strong> — no real accounts.
+        <br />Password: <code>oakdash2026</code>
+      </div>
+
+      <a class="alo__back" href="../index.html" data-action="admin-login-back">← Back to website</a>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const SESSION_KEY = 'emberOakAdminSession';
+
+      // Already signed in? Go straight to the dashboard.
+      if (localStorage.getItem(SESSION_KEY)) {
+        window.location.replace('index.html');
+      }
+
+      const DEMO_PASSWORD = 'oakdash2026';
+      const form = document.getElementById('aloForm');
+      const pass = document.getElementById('aloPass');
+      const error = document.getElementById('aloError');
+
+      function showError(msg) {
+        error.textContent = msg;
+        form.classList.toggle('has-error', Boolean(msg));
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const value = pass.value.trim();
+        if (!value) { showError('Please enter the admin password.'); pass.focus(); return; }
+        if (value !== DEMO_PASSWORD) {
+          showError('Incorrect password. Try the demo password shown below.');
+          pass.focus();
+          pass.select();
+          return;
+        }
+        showError('');
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ at: Date.now(), user: 'demo-admin' }));
+        window.location.replace('index.html');
+      });
+
+      pass.addEventListener('input', function () {
+        if (form.classList.contains('has-error')) showError('');
+      });
+    })();
+  </script>
+</body>
+</html>
