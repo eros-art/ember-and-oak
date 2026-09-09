@@ -197,5 +197,6 @@
     clearSeeds,
     fmtMoney,
     fmtTime,
+    normalize,
   };
 })();

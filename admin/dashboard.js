@@ -9,6 +9,16 @@
     return s ? s.name : (id || '—');
   };
 
+  /* ---------- Cloud-first order source (Phase 2) ---------- */
+  const useCloud = () => !!(window.EOOrders && window.EOOrders.isOnline() && window.EOOrders.isReady());
+
+  function currentOrders() {
+    if (useCloud()) {
+      try { return window.EOOrders.list(); } catch { /* fall through */ }
+    }
+    try { return A.getOrders(); } catch { return []; }
+  }
+
   function pickLabel(order) {
     const when = order.customer.when;
     if (!when || when === 'asap' || when === '0') return 'ASAP';
@@ -34,11 +44,14 @@
     if (!listEl) return;
 
     let orders = [];
-    try { orders = A.getOrders(); } catch { orders = []; }
-    const seeded = (typeof A.isSeed === 'function') && A.isSeed();
+    try { orders = currentOrders(); } catch { orders = []; }
+    const seeded = !useCloud() && (typeof A.isSeed === 'function') && A.isSeed();
+    const sourceTxt = useCloud()
+      ? 'live orders'
+      : (seeded ? 'sample data (no real orders yet)' : 'orders from localStorage');
 
     if (chip) chip.hidden = !seeded;
-    if (meta) meta.textContent = `${orders.length} order${orders.length === 1 ? '' : 's'} · ${seeded ? 'sample data (no real orders yet)' : 'orders from localStorage'}`;
+    if (meta) meta.textContent = `${orders.length} order${orders.length === 1 ? '' : 's'} · ${sourceTxt}`;
 
     if (orders.length === 0) {
       listEl.innerHTML = `
@@ -86,26 +99,39 @@
 
   /* ----------------------------------------------------------
    * Order actions — mark done / cancel / reopen (persisted).
-   * Seeds have no backing row in localStorage, so the first action
-   * materializes the current set into storage, then updates + saves.
+   * Online: writes status to Supabase (realtime/refresh keeps UI in step).
+   * Offline: falls back to the Phase 1 localStorage path.
    * ---------------------------------------------------------- */
   function orderAction(action, id) {
+    const newStatus =
+      (action === 'order-done')   ? 'completed' :
+      (action === 'order-cancel') ? 'cancelled' :
+      (action === 'order-reopen') ? 'pending'   : null;
+    if (!newStatus) return;
+
+    if (useCloud()) {
+      window.EOOrders.setStatus(id, { status: newStatus }).then(() => {
+        render();
+        renderSales();
+      });
+      return;
+    }
+
     let orders;
     try { orders = A.getOrders(); } catch { return; }
     const target = orders.find(o => o.id === id);
     if (!target) return;
-
-    if (action === 'order-done') { target.status = 'completed'; }
-    else if (action === 'order-cancel') { target.status = 'cancelled'; }
-    else if (action === 'order-reopen') { target.status = 'pending'; }
-    else return;
-
+    target.status = newStatus;
     A.saveOrders(orders);
     render();
     renderSales();
   }
 
   function startAutoRefresh() {
+    // Realtime cloud updates (Phase 2) — whenever the mirrored list changes.
+    if (window.EOOrders) {
+      window.EOOrders.onChange(() => { render(); renderSales(); });
+    }
     // Cross-tab: a customer ordering in another tab updates localStorage.
     window.addEventListener('storage', (e) => {
       if (e.key === A.ORDERS_KEY || e.key === null) { render(); renderSales(); }
@@ -117,9 +143,14 @@
       if (t) {
         const btn = t;
         btn.classList.add('is-spinning');
-        render();
-        renderSales();
-        setTimeout(() => btn.classList.remove('is-spinning'), 400);
+        const done = () => setTimeout(() => btn.classList.remove('is-spinning'), 400);
+        if (useCloud() && window.EOOrders) {
+          window.EOOrders.refresh().then(() => { render(); renderSales(); done(); });
+        } else {
+          render();
+          renderSales();
+          done();
+        }
         return;
       }
       const act = e.target.closest('[data-action^="order-"]');
@@ -140,13 +171,13 @@
     document.addEventListener('change', (e) => {
       if (e.target && e.target.classList.contains('mnu__price-input')) commitPrice(e.target);
     });
-    // Poll as a safety net for anything we miss.
+    // Poll as a safety net for anything realtime/storage events miss.
     setInterval(() => {
       const cached = window.__admLastCount;
       const meta = document.getElementById('ordersMeta');
       if (cached === undefined) return;
       let count;
-      try { count = A.getOrders().length; } catch { return; }
+      try { count = currentOrders().length; } catch { return; }
       if (count !== cached) { render(); renderSales(); }
     }, 3000);
 
@@ -163,6 +194,13 @@
   try { window.__admLastCount = A.getOrders().length; } catch { /* ignore */ }
   renderMenu();
   renderSales();
+
+  // Phase 2: bring cloud orders in. onChange → re-render when it resolves.
+  if (window.EOOrders) {
+    window.EOOrders.init().then(() => {
+      try { window.__admLastCount = currentOrders().length; } catch { /* ignore */ }
+    });
+  }
 
   /* ----------------------------------------------------------
  * Menu Manager (Task F) — inline price edit + sold-out toggle,
@@ -391,8 +429,8 @@
     if (!root) return;
 
     let orders = [];
-    try { orders = A.getOrders(); } catch { orders = []; }
-    const seeded = (typeof A.isSeed === 'function') && A.isSeed();
+    try { orders = currentOrders(); } catch { orders = []; }
+    const seeded = !useCloud() && (typeof A.isSeed === 'function') && A.isSeed();
     const { totals, stores, items } = aggregate(orders);
     const storesList = storesSorted(stores);
     const top = topItems(items, 5);
@@ -402,7 +440,7 @@
     // Toolbar meta
     const meta = document.getElementById('salesMeta');
     if (meta) meta.textContent = hasData
-      ? `${totals.orderCount} order${totals.orderCount === 1 ? '' : 's'} · ${totalItemsSold} item${totalItemsSold === 1 ? '' : 's'} sold · ${seeded ? 'sample data' : 'live data'}`
+      ? `${totals.orderCount} order${totals.orderCount === 1 ? '' : 's'} · ${totalItemsSold} item${totalItemsSold === 1 ? '' : 's'} sold · ${useCloud() ? 'live data' : (seeded ? 'sample data' : 'local data')}`
       : 'No data yet — sample orders appear when storage is empty.';
 
     const chip = document.getElementById('salesSeedChip');

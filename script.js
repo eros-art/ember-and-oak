@@ -13,6 +13,24 @@
   const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const money = (n) => `$${n.toFixed(2)}`;
 
+  // ---------- Cloud sync (Phase 2: Supabase) ----------
+  const cloud = (window.EO_SUPABASE && window.supabase)
+    ? window.supabase.createClient(window.EO_SUPABASE.url, window.EO_SUPABASE.anonKey)
+    : null;
+
+  function syncOrderToCloud(order) {
+    if (!cloud || !order) return Promise.resolve();
+    return cloud.from('orders').insert({
+      eo_id: order.id,
+      ts: order.ts,
+      status: order.status || 'pending',
+      paid: !!order.paid,
+      data: order,
+    }).then(({ error }) => {
+      if (error) console.warn('[cloud] insert failed:', error.message);
+    }).catch((e) => console.warn('[cloud] sync error:', e.message));
+  }
+
   // ---------- 0. Render menu from DATA ----------
   // Value-card icons (Lucide-style inline SVG)
   const VALUE_ICONS = {
@@ -361,10 +379,24 @@
     catch { /* ignore */ }
   }
 
-  function nextOrderId(orders) {
+  // Cloud-aware order id: base = highest seq already in Supabase (so a fresh
+  // device can't collide with orders placed elsewhere), else local fallback.
+  function nextCloudOrderId(localOrders) {
     const year = new Date().getFullYear();
-    const seq = orders.length + 1;
-    return `EO-${year}-${String(seq).padStart(4, '0')}`;
+    const seqOf = (id) => {
+      const m = /-(\d+)$/.exec(String(id || ''));
+      return m ? parseInt(m[1], 10) : 0;
+    };
+    let seq = localOrders.reduce((mx, o) => Math.max(mx, seqOf(o.id)), 0);
+    if (cloud) {
+      return cloud.from('orders').select('eo_id').then(({ data, error }) => {
+        if (!error && Array.isArray(data)) {
+          seq = data.reduce((mx, r) => Math.max(mx, seqOf(r.eo_id)), seq);
+        }
+        return `EO-${year}-${String(seq + 1).padStart(4, '0')}`;
+      }).catch(() => `EO-${year}-${String(seq + 1).padStart(4, '0')}`);
+    }
+    return Promise.resolve(`EO-${year}-${String(seq + 1).padStart(4, '0')}`);
   }
 
   function openCheckout() {
@@ -456,7 +488,7 @@
     return ok;
   }
 
-  function placeOrder() {
+  async function placeOrder() {
     if (state.cart.length === 0) return null;
     if (!validateCheckout()) return null;
 
@@ -464,7 +496,7 @@
     const data = Object.fromEntries(new FormData(form).entries());
     const orders = loadOrders();
     const order = {
-      id: nextOrderId(orders),
+      id: await nextCloudOrderId(orders),
       ts: Date.now(),
       customer: {
         name:    (data.name || '').trim(),
@@ -488,6 +520,7 @@
     };
     orders.push(order);
     saveOrders(orders);
+    syncOrderToCloud(order);
 
     // Show success step
     const oid = $('#co-order-id');
@@ -1279,8 +1312,8 @@
         btn.disabled = true;
       }
       // Simulate network request
-      setTimeout(() => {
-        placeOrder();
+      setTimeout(async () => {
+        await placeOrder();
         if (btn) {
           btn.classList.remove('is-loading');
           btn.disabled = false;
