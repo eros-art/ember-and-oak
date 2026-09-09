@@ -12,6 +12,9 @@
   /* ---------- Cloud-first order source (Phase 2) ---------- */
   const useCloud = () => !!(window.EOOrders && window.EOOrders.isOnline() && window.EOOrders.isReady());
 
+  // Menu cloud data — must be initialized BEFORE any render call that may read it
+  let cloudMenuItems = [];
+
   function currentOrders() {
     if (useCloud()) {
       try { return window.EOOrders.list(); } catch { /* fall through */ }
@@ -222,7 +225,6 @@
  * DB-first with localStorage fallback for offline.
  * ---------------------------------------------------------- */
   const MENU_OVERRIDES_KEY = 'emberOakMenuOverrides';
-  let cloudMenuItems = [];
 
   async function loadMenuFromDB() {
     const cfg = window.EO_SUPABASE;
