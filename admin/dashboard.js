@@ -341,7 +341,7 @@
       </div>`).join('');
   }
 
-  function menuAction(action, id, target) {
+  async function menuAction(action, id, target) {
     const cfg = window.EO_SUPABASE;
     const client = (cfg && window.supabase)
       ? window.supabase.createClient(cfg.url, cfg.anonKey) : null;
