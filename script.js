@@ -12,6 +12,11 @@
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
   const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const money = (n) => `$${n.toFixed(2)}`;
+  const esc = (s) => String(s == null ? '' : s)
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"');
 
   // ---------- Cloud sync (Phase 2: Supabase) ----------
   const cloud = (window.EO_SUPABASE && window.supabase)
@@ -22,6 +27,7 @@
     if (!cloud || !order) return Promise.resolve();
     return cloud.from('orders').insert({
       eo_id: order.id,
+      user_id: order.userId || null,
       ts: order.ts,
       status: order.status || 'pending',
       paid: !!order.paid,
@@ -44,14 +50,20 @@
   // open a per-line editor in the drawer.
   function renderMenu() {
     const grid = $('#menuGrid');
-    if (!grid || !window.DATA) return;
+    if (!grid) return;
     grid.innerHTML = '';
-    DATA.menu.forEach(item => {
-      const tagsHtml = (item.tags || []).map((t, i) =>
+
+    const items = window.EOMenu?.getItems() || DATA.menu;
+
+    items.forEach(item => {
+      const tagsHtml = (item.tags || []).map((t) =>
         `<span class="tag${t === 'Fan Favorite' ? ' tag--accent' : ''}">${t}</span>`
       ).join('');
+      const soldOutHtml = item.soldOut
+        ? '<span class="tag tag--soldout">Sold out</span>'
+        : '';
       const card = document.createElement('article');
-      card.className = 'card menu-card';
+      card.className = 'card menu-card' + (item.soldOut ? ' is-soldout' : '');
       card.dataset.category = item.category;
       card.dataset.itemId = item.id;
       card.dataset.img = item.image;
@@ -59,6 +71,7 @@
       card.innerHTML = `
         <div class="menu-card__img">
           <img src="${item.thumb}" alt="${item.name}" loading="lazy" />
+          ${item.soldOut ? '<span class="menu-card__sold-overlay">Sold Out</span>' : ''}
         </div>
         <div class="menu-card__body">
           <div class="menu-card__head">
@@ -66,20 +79,36 @@
             <span class="menu-card__price">${money(item.price)}</span>
           </div>
           <p class="menu-card__desc">${item.shortDesc}</p>
-          ${tagsHtml}
+          ${tagsHtml}${soldOutHtml}
           <button class="btn btn--primary menu-card__add" type="button"
-                  data-action="add-to-cart" data-item-id="${item.id}">
+                  data-action="add-to-cart" data-item-id="${item.id}"
+                  ${item.soldOut ? 'disabled' : ''}>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            Add to cart
+            ${item.soldOut ? 'Sold out' : 'Add to cart'}
           </button>
         </div>
       `;
       grid.appendChild(card);
     });
-    // re-observe new cards for reveals
+
+    // Re-wire card click handlers for the item modal
+    $$('.menu-card').forEach(card => {
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', 'View item details');
+      card.addEventListener('click', () => openItemModal(card));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openItemModal(card);
+        }
+      });
+    });
+
+    // Re-observe for scroll reveals
     if ('IntersectionObserver' in window && !isReducedMotion) {
       $$('.reveal', grid).forEach(el => revealIO?.observe(el));
     }
@@ -160,10 +189,10 @@
 
   // ---------- 0e. Price helpers ----------
   function getItem(itemId) {
-    return DATA.menu.find(m => m.id === itemId);
+    return window.EOMenu?.getItem(itemId) || DATA.menu.find(m => m.id === itemId);
   }
   function getAddOn(addOnId) {
-    return DATA.addOns.find(a => a.id === addOnId);
+    return window.EOMenu?.getAddOn(addOnId) || DATA.addOns.find(a => a.id === addOnId);
   }
   function lineUnitPrice(line) {
     const item = getItem(line.itemId);
@@ -198,6 +227,7 @@
   function addToCart(itemId, storeId, qty = 1, addOnIds = []) {
     const item = getItem(itemId);
     if (!item) return;
+    if (item.soldOut) return; // block adding sold-out items
     const useStore = storeId || defaultStoreId();
     const key = addOnsKey(addOnIds);
     // merge by itemId + storeId + sorted addOnIds
@@ -495,8 +525,17 @@
     const form = checkoutForm;
     const data = Object.fromEntries(new FormData(form).entries());
     const orders = loadOrders();
+
+    // Get logged-in user's ID (if any)
+    let userId = null;
+    if (cloud) {
+      const { data: { session } } = await cloud.auth.getSession();
+      userId = session?.user?.id || null;
+    }
+
     const order = {
       id: await nextCloudOrderId(orders),
+      userId,
       ts: Date.now(),
       customer: {
         name:    (data.name || '').trim(),
@@ -560,11 +599,13 @@
   //  with a loading state and a simulated network delay.)
 
   // ==========================================================
-  // 0k. AUTH MODAL (login / signup — demo mock)
+  // 0k. AUTH MODAL (login / signup — Supabase Auth)
   // ==========================================================
   const authModal = $('#authModal');
   const loginForm = $('#loginForm');
   const signupForm = $('#signupForm');
+  const forgotLink = $('#forgotPassword');
+  const goToLoginLink = $('#goToLogin');
 
   function openAuth(pane = 'login') {
     if (!authModal) return;
@@ -587,32 +628,113 @@
     $$('.auth__pane', authModal).forEach(p => {
       p.classList.toggle('is-active', p.dataset.authPane === pane);
     });
+    // Clear any errors when switching panes
+    $$('.form__group.has-error', authModal).forEach(g => g.classList.remove('has-error'));
+    $$('.form__error', authModal).forEach(e => e.textContent = '');
   }
   function authFieldError(form, name, message) {
-    const el = $(`#${form}-form [name="${name}"]`);
+    const el = $(`#${form}Form [name="${name}"]`);
     if (!el) return;
     const wrap = el.closest('.form__group');
     const err = wrap.querySelector('.form__error');
     if (err) err.textContent = message || '';
     wrap.classList.toggle('has-error', Boolean(message));
   }
-  function mockAuth(form, name, message) {
-    const fields = $('#' + form + 'Form') ? Array.from($('#' + form + 'Form').querySelectorAll('input')) : [];
-    let ok = true;
-    fields.forEach(f => {
-      const v = (f.value || '').trim();
-      let msg = '';
-      if (f.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) msg = 'Enter a valid email';
-      else if (f.type === 'password' && f.name !== 'password' && v.length < 8 && form === 'signup') msg = 'At least 8 characters';
-      else if (f.name === 'name' && v.length < 2 && form === 'signup') msg = 'Enter your name';
-      else if (f.required && !v) msg = 'This field is required';
-      authFieldError(form, f.name, msg);
-      if (msg) ok = false;
-    });
-    if (!ok) return;
-    closeAuth();
-    setLoggedIn(name);
+  function clearAuthErrors(form) {
+    const f = $('#' + form + 'Form');
+    if (!f) return;
+    $$('.form__group.has-error', f).forEach(g => g.classList.remove('has-error'));
+    $$('.form__error', f).forEach(e => e.textContent = '');
   }
+
+  function setBusy(form, busy) {
+    const btn = $('#' + form + 'Form')?.querySelector('button[type="submit"]');
+    if (btn) {
+      btn.classList.toggle('is-loading', busy);
+      btn.disabled = busy;
+    }
+  }
+
+  // Real Supabase login
+  async function handleLogin(e) {
+    e.preventDefault();
+    if (!canSubmit('auth-login')) return;
+    const em = $('#login-email')?.value?.trim();
+    const pw = $('#login-password')?.value;
+    if (!em) { authFieldError('login', 'email', 'Enter your email'); return; }
+    if (!pw) { authFieldError('login', 'password', 'Enter your password'); return; }
+    if (!cloud) { showAuthError('Auth is not configured.'); return; }
+
+    setBusy('login', true);
+    const { error } = await cloud.auth.signInWithPassword({ email: em, password: pw });
+    setBusy('login', false);
+
+    if (error) {
+      authFieldError('login', 'email', error.message);
+      return;
+    }
+    closeAuth();
+    // Session will be picked up by the auth state listener / restore
+  }
+
+  // Real Supabase signup
+  async function handleSignup(e) {
+    e.preventDefault();
+    if (!canSubmit('auth-signup')) return;
+    const name = $('#signup-name')?.value?.trim();
+    const em = $('#signup-email')?.value?.trim();
+    const phone = $('#signup-phone')?.value?.trim();
+    const pw = $('#signup-password')?.value;
+
+    // Client-side validation (mirrors what we had)
+    let ok = true;
+    if (name.length < 2) { authFieldError('signup', 'name', 'Enter your name (2+ chars)'); ok = false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { authFieldError('signup', 'email', 'Enter a valid email'); ok = false; }
+    if (pw.length < 8) { authFieldError('signup', 'password', 'Password must be 8+ characters'); ok = false; }
+    if (!ok) return;
+
+    if (!cloud) { showAuthError('Auth is not configured.'); return; }
+
+    setBusy('signup', true);
+    const { data, error } = await cloud.auth.signUp({
+      email: em,
+      password: pw,
+      options: { data: { full_name: name, phone } }
+    });
+    setBusy('signup', false);
+
+    if (error) {
+      authFieldError('signup', 'email', error.message);
+      return;
+    }
+    closeAuth();
+    // If email confirmation required, user will get an email.
+    // If not, they may be logged in immediately.
+  }
+
+  // Forgot password handler
+  async function handleForgot(e) {
+    e.preventDefault();
+    if (!canSubmit('auth-forgot')) return;
+    const em = $('#login-email')?.value?.trim();
+    if (!em) { authFieldError('login', 'email', 'Enter your email above first'); return; }
+    if (!cloud) return;
+
+    const { error } = await cloud.auth.resetPasswordForEmail(em);
+    if (error) {
+      authFieldError('login', 'email', error.message);
+      return;
+    }
+    // Show success inline
+    const msg = 'Password reset link sent — check your email.';
+    const errEl = $('#loginForm [name="email"]').closest('.form__group').querySelector('.form__error');
+    if (errEl) {
+      errEl.textContent = msg;
+      errEl.style.color = '#2e7d32';
+      setTimeout(() => { errEl.style.color = ''; }, 6000);
+    }
+  }
+
   function setLoggedIn(name) {
     const btn = $('#navLogin');
     const mBtn = $('#mobileLogin');
@@ -621,9 +743,27 @@
     if (mBtn) { mBtn.textContent = label; mBtn.classList.add('is-user'); }
   }
 
-  // Nav login buttons open modal
-  $('#navLogin')?.addEventListener('click', () => openAuth('login'));
-  $('#mobileLogin')?.addEventListener('click', () => openAuth('login'));
+  function setLoggedOut() {
+    const btn = $('#navLogin');
+    const mBtn = $('#mobileLogin');
+    if (btn) { btn.textContent = 'Login'; btn.classList.remove('is-user'); }
+    if (mBtn) { mBtn.textContent = 'Login'; mBtn.classList.remove('is-user'); }
+  }
+
+  // Nav login buttons: open modal if logged out, logout if logged in
+  function handleNavLoginClick() {
+    const btn = $('#navLogin');
+    const isUser = btn?.classList.contains('is-user');
+    if (isUser) {
+      // Log out
+      if (cloud) cloud.auth.signOut();
+      setLoggedOut();
+    } else {
+      openAuth('login');
+    }
+  }
+  $('#navLogin')?.addEventListener('click', handleNavLoginClick);
+  $('#mobileLogin')?.addEventListener('click', handleNavLoginClick);
 
   // Tab switching
   authModal?.addEventListener('click', (e) => {
@@ -641,20 +781,41 @@
     if (t) closeAuth();
   });
 
-  // Form submits (mock)
-  loginForm?.addEventListener('submit', (e) => {
+  // Form submits
+  loginForm?.addEventListener('submit', handleLogin);
+  signupForm?.addEventListener('submit', handleSignup);
+  forgotLink?.addEventListener('click', handleForgot);
+  goToLoginLink?.addEventListener('click', (e) => {
     e.preventDefault();
-    mockAuth('login', $('#login-email')?.value.split('@')[0] || 'Coffee lover');
-  });
-  signupForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    mockAuth('signup', $('#signup-name')?.value.trim() || 'Coffee lover');
+    setAuthPane('login');
   });
 
   // ESC closes auth modal
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && authModal && !authModal.hidden) closeAuth();
   });
+
+  // --- Session restore on page load ---
+  (async function restoreSession() {
+    if (!cloud) return;
+    // Listen for auth state changes (login, logout, password reset, etc.)
+    cloud.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        const meta = session.user.user_metadata || {};
+        const name = meta.full_name || session.user.email?.split('@')[0] || 'Logged in';
+        setLoggedIn(name);
+      } else {
+        setLoggedOut();
+      }
+    });
+    // Initial check
+    const { data: { session } } = await cloud.auth.getSession();
+    if (session?.user) {
+      const meta = session.user.user_metadata || {};
+      const name = meta.full_name || session.user.email?.split('@')[0] || 'Logged in';
+      setLoggedIn(name);
+    }
+  })();
 
 
   // ---------- 1. Nav: solid on scroll, active link highlight ----------
@@ -1148,8 +1309,21 @@
       });
     });
 
-    form.addEventListener('submit', (e) => {
+    // Simple rate limit: one submission per 5 seconds per form
+  const rateLimit = new Map();
+  function canSubmit(formId) {
+    const now = Date.now();
+    const last = rateLimit.get(formId) || 0;
+    if (now - last < 5000) return false;
+    rateLimit.set(formId, now);
+    return true;
+  }
+
+  form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!canSubmit('contact')) {
+        return;
+      }
       const allOk = Object.keys(rules).every(validateField);
       if (!allOk) {
         const firstErr = $('.field.has-error', form);
@@ -1157,22 +1331,34 @@
         return;
       }
 
-      // simulate sending
       submitBtn.classList.add('is-loading');
       submitBtn.disabled = true;
 
-      setTimeout(() => {
-        submitBtn.classList.remove('is-loading');
-        submitBtn.disabled = false;
-        success.hidden = false;
-        success.style.animation = 'none';
-        void success.offsetWidth;
-        success.style.animation = 'fadeUp 0.5s var(--ease)';
-        form.reset();
+      const formData = {
+        name: form.elements.name.value.trim(),
+        email: form.elements.email.value.trim(),
+        topic: form.elements.topic.value,
+        message: form.elements.message.value.trim(),
+      };
 
-        // hide success after a few seconds
-        setTimeout(() => { success.hidden = true; }, 6000);
-      }, 1200);
+      // Save to Supabase if available
+      if (cloud) {
+        try {
+          await cloud.from('messages').insert(formData);
+        } catch (e) {
+          console.warn('[contact] save failed:', e.message);
+        }
+      }
+
+      // Show success regardless (form was validated)
+      submitBtn.classList.remove('is-loading');
+      submitBtn.disabled = false;
+      success.hidden = false;
+      success.style.animation = 'none';
+      void success.offsetWidth;
+      success.style.animation = 'fadeUp 0.5s var(--ease)';
+      form.reset();
+      setTimeout(() => { success.hidden = true; }, 6000);
     });
   }
 
@@ -1325,6 +1511,23 @@
   // Initial cart render + badge
   updateCartBadge();
   renderCart();
+
+  // Initialize DB-driven menu with realtime updates
+  if (window.EOMenu) {
+    window.EOMenu.init().then(() => {
+      renderMenu();
+      // Subscribe to future changes
+      window.EOMenu.onChange(() => {
+        renderMenu();
+        // Re-apply filter since menu cards were replaced
+        const filter = $('.filter.is-active')?.dataset.filter || 'all';
+        $$('.menu-card').forEach(card => {
+          const match = filter === 'all' || card.dataset.category === filter;
+          card.classList.toggle('is-hidden', !match);
+        });
+      });
+    });
+  }
 
   // Console hello
   console.log('%cEmber & Oak', 'color:#C67B4E;font-family:Georgia;font-size:18px;font-weight:bold');

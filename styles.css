@@ -605,6 +605,46 @@ body.dark .menu-card__title { color: var(--steam); }
 }
 .tag--accent { background: var(--copper); color: var(--steam); }
 
+.tag--soldout {
+  background: rgba(192, 57, 43, 0.12);
+  color: #b23a2f;
+  border: 1px solid rgba(192, 57, 43, 0.25);
+}
+body.dark .tag--soldout {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.12);
+}
+
+/* Sold-out menu card */
+.menu-card.is-soldout {
+  opacity: 0.6;
+  pointer-events: none;
+}
+.menu-card.is-soldout .menu-card__add {
+  background: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.menu-card__sold-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(44, 24, 16, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--steam);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+body.dark .menu-card__sold-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
 .menu-card__add {
   margin-top: 14px;
   padding: 8px 16px;
@@ -2156,6 +2196,19 @@ body.dark .auth__tab.is-active { background: #2a1a12; color: var(--copper); }
   margin: 6px 0 6px;
 }
 body.dark .auth__title { color: var(--steam); }
+
+.auth__links {
+  margin-top: 12px;
+  text-align: center;
+}
+.auth__links a {
+  font-size: 0.84rem;
+  color: var(--copper);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s var(--ease);
+}
+.auth__links a:hover { color: var(--copper-dark); }
 
 .form__legal {
   font-size: 0.78rem;

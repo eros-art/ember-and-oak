@@ -533,13 +533,10 @@
   <script src="dashboard.js"></script>
   <script>
     (function () {
-      const SESSION_KEY = 'emberOakAdminSession';
-
-      // Guard: no session? back to the login page.
-      if (!localStorage.getItem(SESSION_KEY)) {
-        window.location.replace('login.html');
-        return;
-      }
+      const cfg = window.EO_SUPABASE;
+      const sessionClient = (window.supabase && cfg)
+        ? window.supabase.createClient(cfg.url, cfg.anonKey)
+        : null;
 
       const TITLES = { orders: 'Live Orders', menu: 'Menu Manager', sales: 'Sales Summary' };
       const titleEl = document.getElementById('admTitle');
@@ -564,9 +561,24 @@
         t.addEventListener('click', () => activate(t.dataset.tab));
       });
 
+      // Guard: no Supabase session? back to the login page.
+      (async function () {
+        if (!sessionClient) {
+          window.location.replace('login.html');
+          return;
+        }
+        const { data: { session } } = await sessionClient.auth.getSession();
+        if (!session) {
+          window.location.replace('login.html');
+        }
+      })();
+
       // Log out
-      document.getElementById('admLogout')?.addEventListener('click', () => {
-        localStorage.removeItem(SESSION_KEY);
+      document.getElementById('admLogout')?.addEventListener('click', async () => {
+        if (sessionClient) {
+          try { await sessionClient.auth.signOut(); } catch (e) {}
+        }
+        localStorage.removeItem('emberOakAdminSession');
         window.location.replace('login.html');
       });
 

@@ -605,7 +605,7 @@
     </div>
   </div>
 
-  <!-- ===== AUTH MODAL (login / signup, demo only) ===== -->
+  <!-- ===== AUTH MODAL (login / signup, real Supabase Auth) ===== -->
   <div class="auth-modal" id="authModal" hidden role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="modal__backdrop" data-action="close-auth"></div>
     <div class="modal__dialog auth" role="document">
@@ -623,7 +623,6 @@
         <div class="auth__pane is-active" data-auth-pane="login">
           <p class="eyebrow">— Welcome back —</p>
           <h2 class="auth__title" id="authTitle">Log in to your account</h2>
-          <p class="checkout__sub">Demo only — no real account is created or stored.</p>
 
           <form class="form" id="loginForm" novalidate>
             <div class="form__group">
@@ -637,7 +636,9 @@
               <span class="form__error" data-error-for="password"></span>
             </div>
             <button type="submit" class="btn btn--primary btn--lg btn--block">Log in</button>
-            <p class="form__legal">This is a UI mock. Real auth arrives with the database (Phase 2).</p>
+            <p class="auth__links">
+              <a href="#" id="forgotPassword">Forgot password?</a>
+            </p>
           </form>
         </div>
 
@@ -645,7 +646,6 @@
         <div class="auth__pane" data-auth-pane="signup">
           <p class="eyebrow">— Join us —</p>
           <h2 class="auth__title">Create an account</h2>
-          <p class="checkout__sub">Demo only — no real account is created or stored.</p>
 
           <form class="form" id="signupForm" novalidate>
             <div class="form__group">
@@ -659,12 +659,19 @@
               <span class="form__error" data-error-for="email"></span>
             </div>
             <div class="form__group">
+              <label for="signup-phone">Phone number</label>
+              <input type="tel" id="signup-phone" name="phone" placeholder="(503) 555-0123" autocomplete="tel" />
+              <span class="form__error" data-error-for="phone"></span>
+            </div>
+            <div class="form__group">
               <label for="signup-password">Password</label>
               <input type="password" id="signup-password" name="password" placeholder="8+ characters" autocomplete="new-password" required minlength="8" />
               <span class="form__error" data-error-for="password"></span>
             </div>
             <button type="submit" class="btn btn--primary btn--lg btn--block">Create account</button>
-            <p class="form__legal">This is a UI mock. Real auth arrives with the database (Phase 2).</p>
+            <p class="auth__links">
+              <a href="#" id="goToLogin">Already have an account? Log in</a>
+            </p>
           </form>
         </div>
       </div>
@@ -674,6 +681,7 @@
   <script src="supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="data.js"></script>
+  <script src="menu-db.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

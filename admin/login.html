@@ -132,6 +132,17 @@
       transition: color 0.2s var(--ease);
     }
     .alo__back:hover { color: var(--copper); }
+
+    .alo__forgot {
+      display: inline-block;
+      margin-top: 16px;
+      font-size: 0.82rem;
+      color: var(--copper);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s var(--ease);
+    }
+    .alo__forgot:hover { color: var(--copper-dark); }
   </style>
 </head>
 <body>
@@ -151,58 +162,100 @@
       <p class="alo__sub">Sign in to manage orders, the menu, and sales.</p>
 
       <form class="alo__form" id="aloForm" novalidate>
+        <label for="aloEmail">Email</label>
+        <input type="email" id="aloEmail" name="email" autocomplete="username" placeholder="you@example.com" />
         <label for="aloPass">Password</label>
-        <input type="password" id="aloPass" name="password" autocomplete="current-password" placeholder="Enter admin password" />
+        <input type="password" id="aloPass" name="password" autocomplete="current-password" placeholder="Enter your password" />
         <span class="alo__error" id="aloError" role="alert"></span>
         <button type="submit" class="btn btn--primary" style="width:100%;justify-content:center;">Sign in</button>
       </form>
 
-      <div class="alo__demo">
-        <strong>Demo only</strong> — no real accounts.
-        <br />Password: <code>oakdash2026</code>
-      </div>
+      <a class="alo__forgot" href="#" id="aloForgot">Forgot password?</a>
 
       <a class="alo__back" href="../index.html" data-action="admin-login-back">← Back to website</a>
     </div>
   </main>
 
+  <script src="../supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     (function () {
-      const SESSION_KEY = 'emberOakAdminSession';
-
-      // Already signed in? Go straight to the dashboard.
-      if (localStorage.getItem(SESSION_KEY)) {
-        window.location.replace('index.html');
-      }
-
-      const DEMO_PASSWORD = 'oakdash2026';
+      const cfg = window.EO_SUPABASE;
       const form = document.getElementById('aloForm');
+      const email = document.getElementById('aloEmail');
       const pass = document.getElementById('aloPass');
       const error = document.getElementById('aloError');
+      const forgot = document.getElementById('aloForgot');
+
+      function client() {
+        return window.supabase && cfg
+          ? window.supabase.createClient(cfg.url, cfg.anonKey)
+          : null;
+      }
 
       function showError(msg) {
         error.textContent = msg;
         form.classList.toggle('has-error', Boolean(msg));
       }
+      function clearError() {
+        if (form.classList.contains('has-error')) showError('');
+      }
 
-      form.addEventListener('submit', function (e) {
+      function setBusy(busy) {
+        const btn = form.querySelector('button[type="submit"]');
+        btn.classList.toggle('is-loading', busy);
+        btn.disabled = busy;
+      }
+
+      // Already signed in? Go straight to the dashboard.
+      (async function () {
+        const supabase = client();
+        if (!supabase) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) window.location.replace('index.html');
+      })();
+
+      form.addEventListener('submit', async function (e) {
         e.preventDefault();
-        const value = pass.value.trim();
-        if (!value) { showError('Please enter the admin password.'); pass.focus(); return; }
-        if (value !== DEMO_PASSWORD) {
-          showError('Incorrect password. Try the demo password shown below.');
-          pass.focus();
+        const em = email.value.trim();
+        const pw = pass.value;
+        if (!em) { showError('Please enter your email.'); email.focus(); return; }
+        if (!pw) { showError('Please enter your password.'); pass.focus(); return; }
+
+        const supabase = client();
+        if (!supabase) { showError('Auth is not configured.'); return; }
+
+        setBusy(true);
+        const { error: authError } = await supabase.auth.signInWithPassword({ email: em, password: pw });
+        setBusy(false);
+
+        if (authError) {
+          showError(authError.message || 'Unable to sign in.');
           pass.select();
           return;
         }
-        showError('');
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ at: Date.now(), user: 'demo-admin' }));
         window.location.replace('index.html');
       });
 
-      pass.addEventListener('input', function () {
-        if (form.classList.contains('has-error')) showError('');
+      forgot.addEventListener('click', async function (e) {
+        e.preventDefault();
+        const em = email.value.trim();
+        if (!em) { showError('Enter your email above, then click forgot password.'); email.focus(); return; }
+        const supabase = client();
+        if (!supabase) return;
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(em);
+        if (resetError) { showError(resetError.message); return; }
+        showError('');
+        email.value = '';
+        pass.value = '';
+        error.textContent = '';
+        error.style.color = '#2e7d32';
+        error.textContent = 'Password reset link sent — check your email.';
+        setTimeout(function () { error.style.color = ''; }, 6000);
       });
+
+      email.addEventListener('input', clearError);
+      pass.addEventListener('input', clearError);
     })();
   </script>
 </body>

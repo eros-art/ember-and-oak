@@ -202,11 +202,49 @@
     });
   }
 
+  // Load menu from DB and subscribe to realtime
+  loadMenuFromDB().then(() => {
+    renderMenu();
+    renderSales();
+    // Subscribe to menu changes for live updates
+    if (window.EO_SUPABASE && window.supabase) {
+      const client = window.supabase.createClient(window.EO_SUPABASE.url, window.EO_SUPABASE.anonKey);
+      client.channel('eo-admin-menu')
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'menu_items' },
+          async () => { await loadMenuFromDB(); renderMenu(); renderSales(); })
+        .subscribe();
+    }
+  });
+
   /* ----------------------------------------------------------
  * Menu Manager (Task F) — inline price edit + sold-out toggle,
- * overrides persisted to localStorage, applied on top of DATA.menu.
+ * DB-first with localStorage fallback for offline.
  * ---------------------------------------------------------- */
   const MENU_OVERRIDES_KEY = 'emberOakMenuOverrides';
+  let cloudMenuItems = [];
+
+  async function loadMenuFromDB() {
+    const cfg = window.EO_SUPABASE;
+    if (!cfg || !window.supabase) return false;
+    try {
+      const client = window.supabase.createClient(cfg.url, cfg.anonKey);
+      const { data, error } = await client
+        .from('menu_items')
+        .select('*')
+        .eq('active', true)
+        .order('sort_order');
+      if (error) {
+        console.warn('[menu-db] admin load:', error.message);
+        return false;
+      }
+      cloudMenuItems = data || [];
+      return true;
+    } catch (e) {
+      console.warn('[menu-db] admin load failed:', e.message);
+      return false;
+    }
+  }
 
   function loadOverrides() {
     try {
@@ -225,6 +263,19 @@
   }
 
   function effectiveMenu() {
+    if (cloudMenuItems.length > 0) {
+      return cloudMenuItems.map(row => ({
+        id: row.id,
+        name: row.name,
+        category: row.category,
+        shortDesc: row.short_desc,
+        price: Number(row.price),
+        thumb: row.thumb,
+        soldOut: !!row.sold_out,
+        edited: false,
+      }));
+    }
+    // Fallback: DATA.js + localStorage overrides (offline mode)
     const base = (window.DATA && window.DATA.menu) || [];
     const ov = loadOverrides();
     return base.map(it => {
@@ -291,24 +342,60 @@
   }
 
   function menuAction(action, id, target) {
-    const map = loadOverrides();
+    const cfg = window.EO_SUPABASE;
+    const client = (cfg && window.supabase)
+      ? window.supabase.createClient(cfg.url, cfg.anonKey) : null;
+
     if (action === 'menu-soldout') {
       const on = !!target && target.checked;
-      map[id] = Object.assign({}, map[id], { soldOut: on });
-      saveOverrides(map);
+      if (client) {
+        const { error } = await client.from('menu_items')
+          .update({ sold_out: on, updated_at: new Date().toISOString() })
+          .eq('id', id);
+        if (error) console.warn('[menu] soldout update:', error.message);
+        await loadMenuFromDB();
+      } else {
+        // Fallback: localStorage
+        const map = loadOverrides();
+        map[id] = Object.assign({}, map[id], { soldOut: on });
+        saveOverrides(map);
+      }
       renderMenu();
       return;
     }
+
     if (action === 'menu-reset') {
-      clearItemOverride(id);
+      if (client) {
+        const baseItem = (window.DATA && DATA.menu || []).find(i => i.id === id);
+        if (baseItem) {
+          const { error } = await client.from('menu_items')
+            .update({ price: baseItem.price, sold_out: false, updated_at: new Date().toISOString() })
+            .eq('id', id);
+          if (error) console.warn('[menu] reset:', error.message);
+          await loadMenuFromDB();
+        }
+      } else {
+        clearItemOverride(id);
+      }
       renderMenu();
       return;
     }
+
     if (action === 'menu-reset-all') {
-      saveOverrides({});
+      if (client) {
+        for (const baseItem of (window.DATA && DATA.menu || [])) {
+          await client.from('menu_items')
+            .update({ price: baseItem.price, sold_out: false, updated_at: new Date().toISOString() })
+            .eq('id', baseItem.id);
+        }
+        await loadMenuFromDB();
+      } else {
+        saveOverrides({});
+      }
       renderMenu();
       return;
     }
+
     if (action === 'menu-edit-price') {
       const base = effectiveMenu();
       const item = base.find(i => i.id === id);
@@ -325,15 +412,27 @@
     }
   }
 
-  function commitPrice(input) {
+  async function commitPrice(input) {
     const row = input.closest('.mnu__row');
     if (!row) return;
     const id = row.dataset.itemId;
     const raw = input.value.trim();
     if (raw === '') { renderMenu(); return; }
     const price = Number(raw);
-    const map = loadOverrides();
-    if (!isNaN(price) && price >= 0 && price <= 99) {
+    if (isNaN(price) || price < 0 || price > 99) { renderMenu(); return; }
+
+    const cfg = window.EO_SUPABASE;
+    const client = (cfg && window.supabase)
+      ? window.supabase.createClient(cfg.url, cfg.anonKey) : null;
+
+    if (client) {
+      const { error } = await client.from('menu_items')
+        .update({ price: Math.round(price * 100) / 100, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) console.warn('[menu] price update:', error.message);
+      await loadMenuFromDB();
+    } else {
+      const map = loadOverrides();
       map[id] = Object.assign({}, map[id], { price: Math.round(price * 100) / 100 });
       saveOverrides(map);
     }
