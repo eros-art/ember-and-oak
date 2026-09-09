@@ -186,6 +186,7 @@
       const pass = document.getElementById('aloPass');
       const error = document.getElementById('aloError');
       const forgot = document.getElementById('aloForgot');
+      const RESET_URL = 'https://eros-art.github.io/emberand-oak/admin/reset-password.html';
 
       function client() {
         return window.supabase && cfg
@@ -199,6 +200,14 @@
       }
       function clearError() {
         if (form.classList.contains('has-error')) showError('');
+      }
+
+      // Arriving from reset-password.html? Reflect the outcome.
+      const resetOk = new URLSearchParams(window.location.search).get('reset');
+      if (resetOk) {
+        error.style.color = '#2e7d32';
+        error.textContent = 'Password updated — sign in with your new password.';
+        setTimeout(function () { error.style.color = ''; error.textContent = ''; }, 8000);
       }
 
       function setBusy(busy) {
@@ -243,7 +252,7 @@
         if (!em) { showError('Enter your email above, then click forgot password.'); email.focus(); return; }
         const supabase = client();
         if (!supabase) return;
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(em);
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(em, { redirectTo: RESET_URL });
         if (resetError) { showError(resetError.message); return; }
         showError('');
         email.value = '';
