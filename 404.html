@@ -30,6 +30,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="i18n.js"></script>
   <style>
     .nf {
       min-height: 100vh;
@@ -96,11 +97,15 @@
         <span class="logo-text">Ember &amp; Oak</span>
       </a>
       <nav class="nav__links" aria-label="Primary">
-        <a href="index.html" class="nav__link">Home</a>
-        <a href="index.html#about" class="nav__link">About</a>
-        <a href="index.html#menu" class="nav__link">Menu</a>
-        <a href="index.html#contact" class="nav__link">Contact</a>
+        <a href="index.html" class="nav__link" data-i18n="nav.home">Home</a>
+        <a href="index.html#about" class="nav__link" data-i18n="nav.about">About</a>
+        <a href="index.html#menu" class="nav__link" data-i18n="nav.menu">Menu</a>
+        <a href="index.html#contact" class="nav__link" data-i18n="nav.contact">Contact</a>
       </nav>
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" class="lang-switch__opt" data-lang="en">EN</button>
+        <button type="button" class="lang-switch__opt" data-lang="tr">TR</button>
+      </div>
     </div>
   </header>
 
@@ -113,25 +118,25 @@
           <path d="M10 4c0 2 2 2 2 4M16 3c0 2 2 2 2 4M22 4c0 2 2 2 2 4"/>
         </svg>
       </span>
-      <span class="nf__steam">This one's decaf.</span>
+      <span class="nf__steam" data-i18n="404.steam">This one's decaf.</span>
       <h1 class="nf__code">404</h1>
-      <h2 class="nf__title">Page not found</h2>
-      <p class="nf__sub">Looks like this cup's already empty. The page you're looking for doesn't exist — but the good stuff is right this way.</p>
+      <h2 class="nf__title" data-i18n="404.title">Page not found</h2>
+      <p class="nf__sub" data-i18n="404.sub">Looks like this cup's already empty. The page you're looking for doesn't exist — but the good stuff is right this way.</p>
       <div class="nf__actions">
-        <a href="index.html" class="btn btn--primary" data-action="go-home">Back to home</a>
-        <a href="index.html#menu" class="btn btn--ghost">Browse the menu</a>
+        <a href="index.html" class="btn btn--primary" data-action="go-home" data-i18n="404.goHome">Back to home</a>
+        <a href="index.html#menu" class="btn btn--ghost" data-i18n="404.browseMenu">Browse the menu</a>
       </div>
     </div>
   </main>
 
   <footer class="footer">
     <div class="container footer__inner">
-      <div class="footer__legal" aria-label="Legal documents">
-        <a href="../legal/index.html">Legal Centre</a>
-        <a href="../legal/privacy-policy.html">Privacy Policy</a>
-        <a href="../legal/cookie-policy.html">Cookie Policy</a>
+      <div class="footer__legal" aria-label="Legal documents" data-i18n-aria="footer.legal">
+        <a href="../legal/index.html" data-i18n="footer.legalCentre">Legal Centre</a>
+        <a href="../legal/privacy-policy.html" data-i18n="footer.privacy">Privacy Policy</a>
+        <a href="../legal/cookie-policy.html" data-i18n="footer.cookies">Cookie Policy</a>
       </div>
-      <p class="footer__copy">© 2026 Ember &amp; Oak. All rights reserved.</p>
+      <p class="footer__copy" data-i18n="footer.copy">© 2026 Ember &amp; Oak. All rights reserved.</p>
     </div>
   </footer>
 </body>

@@ -4,6 +4,8 @@
 (function () {
   'use strict';
   const A = window.AdminData;
+  function t(key) { return window.EOI18n ? EOI18n.t(key) : key; }
+  function fmtMoney(n) { return window.EOI18n ? EOI18n.money(n) : A.fmtMoney(n); }
   const storeName = (id) => {
     const s = (window.DATA && window.DATA.stores || []).find(s => s.id === id);
     return s ? s.name : (id || '—');
@@ -24,14 +26,14 @@
 
   function pickLabel(order) {
     const when = order.customer.when;
-    if (!when || when === 'asap' || when === '0') return 'ASAP';
-    return `in ~${when} min`;
+    if (!when || when === 'asap' || when === '0') return t('time.asap');
+    return t('time.' + when) || `in ~${when} min`;
   }
 
   function itemsSummary(items) {
-    if (!items || items.length === 0) return '<b>No items</b>';
+    if (!items || items.length === 0) return '<b>' + t('misc.itemDefault') + '</b>';
     const list = items.map((l) => `${esc(l.name)} ×${l.qty}`).join('</li><li>');
-    return `<b>${items.length} ${items.length === 1 ? 'item' : 'items'}</b><ul><li>${list}</li></ul>`;
+    return `<b>${items.length} ${items.length === 1 ? t('admin.item') : t('admin.items')}</b><ul><li>${list}</li></ul>`;
   }
 
   function esc(s) {
@@ -50,8 +52,8 @@
     try { orders = currentOrders(); } catch { orders = []; }
     const seeded = !useCloud() && (typeof A.isSeed === 'function') && A.isSeed();
     const sourceTxt = useCloud()
-      ? 'live orders'
-      : (seeded ? 'sample data (no real orders yet)' : 'orders from localStorage');
+      ? t('admin.liveOrders')
+      : (seeded ? t('admin.sampleData') : t('admin.localStorage'));
 
     if (chip) chip.hidden = !seeded;
     if (meta) meta.textContent = `${orders.length} order${orders.length === 1 ? '' : 's'} · ${sourceTxt}`;
@@ -64,19 +66,19 @@
               <circle cx="12" cy="12" r="10"/><path d="M8 12h8"/>
             </svg>
           </div>
-          <h3>No orders yet</h3>
-          <p>New orders will appear here the moment a customer checks out.</p>
+          <h3>${t('admin.noOrders')}</h3>
+          <p>${t('admin.noOrdersSub')}</p>
         </div>`;
       return;
     }
 
     listEl.innerHTML = orders.map((o) => {
       const paidCls = o.paid ? 'paid' : 'unpaid';
-      const paidTxt = o.paid ? 'Paid' : 'Unpaid';
+      const paidTxt = o.paid ? t('admin.paid') : t('admin.unpaid');
       const actions = o.status === 'pending'
-        ? `<button type="button" class="adm__mini adm__mini--done" data-action="order-done" data-id="${esc(o.id)}">Mark done</button>
-           <button type="button" class="adm__mini adm__mini--cancel" data-action="order-cancel" data-id="${esc(o.id)}">Cancel</button>`
-        : `<button type="button" class="adm__mini adm__mini--reopen" data-action="order-reopen" data-id="${esc(o.id)}">Reopen</button>`;
+        ? `<button type="button" class="adm__mini adm__mini--done" data-action="order-done" data-id="${esc(o.id)}">${t('admin.markDone')}</button>
+           <button type="button" class="adm__mini adm__mini--cancel" data-action="order-cancel" data-id="${esc(o.id)}">${t('admin.cancel')}</button>`
+        : `<button type="button" class="adm__mini adm__mini--reopen" data-action="order-reopen" data-id="${esc(o.id)}">${t('admin.reopen')}</button>`;
       return `
       <div class="orders__row is-${esc(o.status)}" data-order-id="${esc(o.id)}">
         <div class="orders__id">
@@ -89,7 +91,7 @@
         </div>
         <div class="orders__items">${itemsSummary(o.items)}</div>
         <div class="orders__right">
-          <span class="orders__total">${A.fmtMoney(o.total)}</span>
+          <span class="orders__total">${fmtMoney(o.total)}</span>
           <span class="orders__badges">
             <span class="badge badge--${esc(o.status)}">${esc(o.status)}</span>
             <span class="badge badge--${paidCls}">${paidTxt}</span>
@@ -311,8 +313,8 @@
               <path d="M3 7h18M3 12h18M3 17h12"/>
             </svg>
           </div>
-          <h3>No menu items</h3>
-          <p>The customer menu (data.js) didn't load. Open the site in another tab first.</p>
+          <h3>${t('admin.noMenu')}</h3>
+          <p>${t('admin.menuSub')}</p>
         </div>`;
       return;
     }
@@ -321,24 +323,24 @@
       <div class="mnu__row${it.soldOut ? ' is-soldout' : ''}" data-item-id="${esc(it.id)}">
         <img class="mnu__thumb" src="${esc(it.thumb || '')}" alt="" loading="lazy" onerror="this.style.visibility='hidden'" />
         <div class="mnu__who">
-          <span class="mnu__name">${esc(it.name)}${it.soldOut ? ' <span class="badge badge--soldout">Sold out</span>' : ''}</span>
+          <span class="mnu__name">${esc(it.name)}${it.soldOut ? ' <span class="badge badge--soldout">' + t('admin.soldOutBadge') + '</span>' : ''}</span>
           <span class="mnu__desc">${esc(it.shortDesc || '')}</span>
         </div>
         <span class="mnu__cat">${esc(categoryLabel(it.category))}</span>
         <div class="mnu__price-wrap">
-          <button type="button" class="mnu__price" data-action="menu-edit-price" data-id="${esc(it.id)}" title="Click to edit price">${A.fmtMoney(it.price)}</button>
-          <span class="mnu__price-hint">click to edit</span>
+          <button type="button" class="mnu__price" data-action="menu-edit-price" data-id="${esc(it.id)}" title="${t('admin.clickToEdit')}">${fmtMoney(it.price)}</button>
+          <span class="mnu__price-hint">${t('admin.clickToEdit')}</span>
         </div>
         <label class="mnu__sold">
-          <span class="mnu__sold-label">Sold out</span>
+          <span class="mnu__sold-label">${t('menu.soldOut')}</span>
           <span class="switch">
             <input type="checkbox" data-action="menu-soldout" data-id="${esc(it.id)}" ${it.soldOut ? 'checked' : ''} />
             <span class="switch__slider"></span>
           </span>
         </label>
         <div class="mnu__flags">
-          <span class="mnu__edited" ${it.edited ? '' : 'hidden'}>edited</span>
-          ${it.edited ? `<button type="button" class="mnu__reset" data-action="menu-reset" data-id="${esc(it.id)}">reset</button>` : ''}
+          <span class="mnu__edited" ${it.edited ? '' : 'hidden'}>${t('admin.edited')}</span>
+          ${it.edited ? `<button type="button" class="mnu__reset" data-action="menu-reset" data-id="${esc(it.id)}">${t('admin.reset')}</button>` : ''}
         </div>
       </div>`).join('');
   }
@@ -405,8 +407,8 @@
       const wrap = target.closest('.mnu__price-wrap');
       if (!wrap || wrap.querySelector('.mnu__price-input')) return;
       wrap.innerHTML = `
-        <input type="number" step="0.25" min="0" max="99" class="mnu__price-input" value="${item.price}" aria-label="New price for ${esc(item.name)}" />
-        <span class="mnu__price-hint">enter to save · esc to cancel</span>`;
+        <input type="number" step="0.25" min="0" max="99" class="mnu__price-input" value="${item.price}" aria-label="${t('admin.clickToEdit')} ${esc(item.name)}" />
+        <span class="mnu__price-hint">${t('admin.enterToSave')}</span>`;
       const input = wrap.querySelector('input');
       input.focus();
       input.select();
@@ -541,8 +543,8 @@
     // Toolbar meta
     const meta = document.getElementById('salesMeta');
     if (meta) meta.textContent = hasData
-      ? `${totals.orderCount} order${totals.orderCount === 1 ? '' : 's'} · ${totalItemsSold} item${totalItemsSold === 1 ? '' : 's'} sold · ${useCloud() ? 'live data' : (seeded ? 'sample data' : 'local data')}`
-      : 'No data yet — sample orders appear when storage is empty.';
+      ? `${totals.orderCount} ${totals.orderCount === 1 ? t('admin.item') : t('admin.items')} · ${totalItemsSold} ${t('admin.items')} · ${useCloud() ? t('admin.liveData') : (seeded ? t('admin.sampleDataShort') : t('admin.localData'))}`
+      : t('admin.noDataYet');
 
     const chip = document.getElementById('salesSeedChip');
     if (chip) chip.hidden = !seeded;
@@ -555,18 +557,18 @@
               <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
             </svg>
           </div>
-          <h3>No sales yet</h3>
-          <p>Stats will appear as soon as the first order lands in storage.</p>
+          <h3>${t('admin.noSales')}</h3>
+          <p>${t('admin.noDataYet')}</p>
         </div>`;
       return;
     }
 
     // Stat cards (revenue, count, paid, unpaid — cancelled separated)
     const cards = [
-      { label: 'Total revenue', value: A.fmtMoney(totals.revenue), hint: `${totals.orderCount - totals.cancelledCount} non-cancelled order${totals.orderCount - totals.cancelledCount === 1 ? '' : 's'}`, tone: 'primary' },
-      { label: 'Total orders',  value: String(totals.orderCount),  hint: `${totals.cancelledCount} cancelled`, tone: 'neutral' },
-      { label: 'Paid',          value: A.fmtMoney(totals.paidRevenue), hint: `${totals.paidCount} order${totals.paidCount === 1 ? '' : 's'}`, tone: 'paid' },
-      { label: 'Unpaid',        value: A.fmtMoney(totals.unpaidRevenue), hint: `${totals.unpaidCount} order${totals.unpaidCount === 1 ? '' : 's'}`, tone: 'unpaid' },
+      { label: t('admin.totalRevenue'), value: fmtMoney(totals.revenue), hint: `${totals.orderCount - totals.cancelledCount} ${(totals.orderCount - totals.cancelledCount) === 1 ? t('admin.nonCancelled') : t('admin.nonCancelledPlural')}`, tone: 'primary' },
+      { label: t('admin.totalOrders'),  value: String(totals.orderCount),  hint: `${totals.cancelledCount} ${t('admin.cancelled')}`, tone: 'neutral' },
+      { label: t('admin.paid'),          value: fmtMoney(totals.paidRevenue), hint: `${totals.paidCount} ${t('admin.item')}${totals.paidCount === 1 ? '' : 's'}`, tone: 'paid' },
+      { label: t('admin.unpaid'),        value: fmtMoney(totals.unpaidRevenue), hint: `${totals.unpaidCount} ${t('admin.item')}${totals.unpaidCount === 1 ? '' : 's'}`, tone: 'unpaid' },
     ];
 
     const cardHtml = cards.map(c => `
@@ -578,26 +580,26 @@
 
     // Per-store table
     const storeRows = storesList.length === 0
-      ? `<tr><td colspan="3" class="sales__empty">No store data.</td></tr>`
+      ? `<tr><td colspan="3" class="sales__empty">${t('admin.noStoreData')}</td></tr>`
       : storesList.map(s => {
           const share = totals.revenue > 0 ? Math.round((s.revenue / totals.revenue) * 100) : 0;
           return `
             <tr>
               <td>${esc(s.name)}</td>
               <td class="sales__num">${s.count}</td>
-              <td class="sales__num">${A.fmtMoney(s.revenue)} <span class="sales__share">${share}%</span></td>
+              <td class="sales__num">${fmtMoney(s.revenue)} <span class="sales__share">${share}%</span></td>
             </tr>`;
         }).join('');
 
     // Top items table
     const itemRows = top.length === 0
-      ? `<tr><td colspan="3" class="sales__empty">No items sold yet.</td></tr>`
+      ? `<tr><td colspan="3" class="sales__empty">${t('admin.noItemsSold')}</td></tr>`
       : top.map((it, i) => `
           <tr>
             <td class="sales__rank">${i + 1}</td>
             <td>${esc(it.name)}</td>
             <td class="sales__num">${it.qty}</td>
-            <td class="sales__num">${A.fmtMoney(it.revenue)}</td>
+            <td class="sales__num">${fmtMoney(it.revenue)}</td>
           </tr>`).join('');
 
     root.innerHTML = `
@@ -605,30 +607,37 @@
       <div class="sales__grid">
         <section class="sales__panel">
           <header class="sales__panel-head">
-            <h2 class="sales__panel-title">Revenue by store</h2>
-            <p class="sales__panel-sub">non-cancelled orders only</p>
+            <h2 class="sales__panel-title">${t('admin.revenueByStore')}</h2>
+            <p class="sales__panel-sub">${t('admin.nonCancelledPlural')}</p>
           </header>
           <table class="sales__table">
             <thead>
-              <tr><th>Store</th><th class="sales__num">Orders</th><th class="sales__num">Revenue</th></tr>
+              <tr><th>${t('admin.store')}</th><th class="sales__num">${t('admin.ordersCol')}</th><th class="sales__num">${t('admin.revenue')}</th></tr>
             </thead>
             <tbody>${storeRows}</tbody>
           </table>
         </section>
         <section class="sales__panel">
           <header class="sales__panel-head">
-            <h2 class="sales__panel-title">Top items</h2>
-            <p class="sales__panel-sub">by quantity sold</p>
+            <h2 class="sales__panel-title">${t('admin.topItems')}</h2>
+            <p class="sales__panel-sub">${t('admin.byQuantity')}</p>
           </header>
           <table class="sales__table">
             <thead>
-              <tr><th class="sales__rank">#</th><th>Item</th><th class="sales__num">Qty</th><th class="sales__num">Revenue</th></tr>
+              <tr><th class="sales__rank">#</th><th>${t('admin.itemCol')}</th><th class="sales__num">${t('admin.qty')}</th><th class="sales__num">${t('admin.revenue')}</th></tr>
             </thead>
             <tbody>${itemRows}</tbody>
           </table>
         </section>
       </div>`;
   }
+
+  /* Re-render all panels when language changes */
+  window.addEventListener('eo:languagechange', function () {
+    render();
+    renderMenu();
+    renderSales();
+  });
 
   window.AdminDashboard = { render, renderMenu, renderSales };
 })();

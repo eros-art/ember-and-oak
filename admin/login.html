@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Admin Login — Ember &amp; Oak Coffee</title>
+
+  <link rel="icon" href="../favicon.ico" sizes="48x48">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <link rel="manifest" href="../site.webmanifest">
+  <meta name="theme-color" content="#2C1810">
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
@@ -157,27 +164,28 @@
           <path d="M10 4c0 2 2 2 2 4M16 3c0 2 2 2 2 4M22 4c0 2 2 2 2 4"/>
         </svg>
       </div>
-      <p class="alo__eyebrow">Barista's only</p>
-      <h1 class="alo__title" id="aloTitle">Admin Login</h1>
-      <p class="alo__sub">Sign in to manage orders, the menu, and sales.</p>
+      <p class="alo__eyebrow" data-i18n="admin.baristaOnly">Barista's only</p>
+      <h1 class="alo__title" id="aloTitle" data-i18n="admin.loginTitle">Admin Login</h1>
+      <p class="alo__sub" data-i18n="admin.loginSub">Sign in to manage orders, the menu, and sales.</p>
 
       <form class="alo__form" id="aloForm" novalidate>
-        <label for="aloEmail">Email</label>
-        <input type="email" id="aloEmail" name="email" autocomplete="username" placeholder="you@example.com" />
-        <label for="aloPass">Password</label>
-        <input type="password" id="aloPass" name="password" autocomplete="current-password" placeholder="Enter your password" />
+        <label for="aloEmail" data-i18n="admin.email">Email</label>
+        <input type="email" id="aloEmail" name="email" autocomplete="username" placeholder="you@example.com" data-i18n-placeholder="auth.emailPlaceholder" />
+        <label for="aloPass" data-i18n="admin.password">Password</label>
+        <input type="password" id="aloPass" name="password" autocomplete="current-password" placeholder="Enter your password" data-i18n-placeholder="auth.passPlaceholder" />
         <span class="alo__error" id="aloError" role="alert"></span>
-        <button type="submit" class="btn btn--primary" style="width:100%;justify-content:center;">Sign in</button>
+        <button type="submit" class="btn btn--primary" style="width:100%;justify-content:center;" data-i18n="admin.signIn">Sign in</button>
       </form>
 
-      <a class="alo__forgot" href="#" id="aloForgot">Forgot password?</a>
+      <a class="alo__forgot" href="#" id="aloForgot" data-i18n="admin.forgotPw">Forgot password?</a>
 
-      <a class="alo__back" href="../index.html" data-action="admin-login-back">← Back to website</a>
+      <a class="alo__back" href="../index.html" data-action="admin-login-back" data-i18n="admin.backWebsite">← Back to website</a>
     </div>
   </main>
 
   <script src="../supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../i18n.js"></script>
   <script>
     (function () {
       const cfg = window.EO_SUPABASE;
@@ -201,12 +209,15 @@
       function clearError() {
         if (form.classList.contains('has-error')) showError('');
       }
+      function t(key) {
+        return window.EOI18n ? EOI18n.t(key) : key;
+      }
 
       // Arriving from reset-password.html? Reflect the outcome.
       const resetOk = new URLSearchParams(window.location.search).get('reset');
       if (resetOk) {
         error.style.color = '#2e7d32';
-        error.textContent = 'Password updated — sign in with your new password.';
+        error.textContent = t('admin.pwUpdated');
         setTimeout(function () { error.style.color = ''; error.textContent = ''; }, 8000);
       }
 
@@ -228,11 +239,11 @@
         e.preventDefault();
         const em = email.value.trim();
         const pw = pass.value;
-        if (!em) { showError('Please enter your email.'); email.focus(); return; }
-        if (!pw) { showError('Please enter your password.'); pass.focus(); return; }
+        if (!em) { showError(t('admin.enterEmail')); email.focus(); return; }
+        if (!pw) { showError(t('admin.enterPassword')); pass.focus(); return; }
 
         const supabase = client();
-        if (!supabase) { showError('Auth is not configured.'); return; }
+        if (!supabase) { showError(t('admin.unableSignIn')); return; }
 
         setBusy(true);
         const { error: authError } = await supabase.auth.signInWithPassword({ email: em, password: pw });
@@ -249,7 +260,7 @@
       forgot.addEventListener('click', async function (e) {
         e.preventDefault();
         const em = email.value.trim();
-        if (!em) { showError('Enter your email above, then click forgot password.'); email.focus(); return; }
+        if (!em) { showError(t('admin.enterEmailFirst')); email.focus(); return; }
         const supabase = client();
         if (!supabase) return;
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(em, { redirectTo: RESET_URL });
@@ -259,7 +270,7 @@
         pass.value = '';
         error.textContent = '';
         error.style.color = '#2e7d32';
-        error.textContent = 'Password reset link sent — check your email.';
+        error.textContent = t('admin.resetSentMsg');
         setTimeout(function () { error.style.color = ''; }, 6000);
       });
 

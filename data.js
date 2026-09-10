@@ -332,3 +332,6 @@ window.DATA = {
   /* ---------------- Misc ---------------- */
   primaryStoreId: 'maple'
 };
+
+/* Snapshot English base for i18n.js — must stay after DATA assignment */
+window.DATA_EN = window.DATA;

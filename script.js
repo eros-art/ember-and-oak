@@ -11,7 +11,8 @@
   const $  = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
   const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const money = (n) => `$${n.toFixed(2)}`;
+  const money = (n) => window.EOI18n ? EOI18n.money(n) : `$${n.toFixed(2)}`;
+  const t = (key) => window.EOI18n ? EOI18n.t(key) : key;
   const esc = (s) => String(s == null ? '' : s)
     .replace(/&/g, '&')
     .replace(/</g, '<')
@@ -62,14 +63,14 @@
     if (!grid) return;
     grid.innerHTML = '';
 
-    const items = window.EOMenu?.getItems() || DATA.menu;
+    const items = (window.EOMenu?.getItems() || DATA.menu).map(i => window.EOI18n ? EOI18n.item(i) : i);
 
     items.forEach(item => {
-      const tagsHtml = (item.tags || []).map((t) =>
-        `<span class="tag${t === 'Fan Favorite' ? ' tag--accent' : ''}">${t}</span>`
+      const tagsHtml = (item.tags || []).map((tag) =>
+        `<span class="tag${EOI18n && EOI18n.tagEn(tag) === 'Fan Favorite' ? ' tag--accent' : ''}">${EOI18n ? EOI18n.tag(tag) : tag}</span>`
       ).join('');
       const soldOutHtml = item.soldOut
-        ? '<span class="tag tag--soldout">Sold out</span>'
+        ? `<span class="tag tag--soldout">${t('menu.soldOut')}</span>`
         : '';
       const card = document.createElement('article');
       card.className = 'card menu-card' + (item.soldOut ? ' is-soldout' : '');
@@ -80,7 +81,7 @@
       card.innerHTML = `
         <div class="menu-card__img">
           <img src="${item.thumb}" alt="${item.name}" loading="lazy" />
-          ${item.soldOut ? '<span class="menu-card__sold-overlay">Sold Out</span>' : ''}
+          ${item.soldOut ? `<span class="menu-card__sold-overlay">${t('menu.soldOutOverlay')}</span>` : ''}
         </div>
         <div class="menu-card__body">
           <div class="menu-card__head">
@@ -96,7 +97,7 @@
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            ${item.soldOut ? 'Sold out' : 'Add to cart'}
+            ${item.soldOut ? t('menu.soldOut') : t('menu.addToCart')}
           </button>
         </div>
       `;
@@ -107,7 +108,7 @@
     $$('.menu-card').forEach(card => {
       card.setAttribute('tabindex', '0');
       card.setAttribute('role', 'button');
-      card.setAttribute('aria-label', 'View item details');
+      card.setAttribute('aria-label', t('menu.viewDetails'));
       card.addEventListener('click', () => openItemModal(card));
       card.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -198,10 +199,12 @@
 
   // ---------- 0e. Price helpers ----------
   function getItem(itemId) {
-    return window.EOMenu?.getItem(itemId) || DATA.menu.find(m => m.id === itemId);
+    const raw = window.EOMenu?.getItem(itemId) || DATA.menu.find(m => m.id === itemId);
+    return window.EOI18n ? EOI18n.item(raw) : raw;
   }
   function getAddOn(addOnId) {
-    return window.EOMenu?.getAddOn(addOnId) || DATA.addOns.find(a => a.id === addOnId);
+    const raw = window.EOMenu?.getAddOn(addOnId) || DATA.addOns.find(a => a.id === addOnId);
+    return window.EOI18n ? EOI18n.addOn(raw) : raw;
   }
   function lineUnitPrice(line) {
     const item = getItem(line.itemId);
@@ -301,7 +304,7 @@
     const addOnChips = (line.addOnIds || []).map(id => {
       const a = getAddOn(id);
       if (!a) return '';
-      return `<li>${a.name} <button type="button" data-action="cart-remove-addon" data-line-id="${line.lineId}" data-addon-id="${id}" aria-label="Remove ${a.name}">×</button></li>`;
+      return `<li>${a.name} <button type="button" data-action="cart-remove-addon" data-line-id="${line.lineId}" data-addon-id="${id}" aria-label="${t('cart.remove')} ${a.name}">×</button></li>`;
     }).join('');
     return `
       <article class="cart-line">
@@ -311,13 +314,13 @@
             <span class="cart-line__name">${item.name}</span>
             <span class="cart-line__price">${money(lineSubtotal(line))}</span>
           </div>
-          <div class="cart-line__store">Pickup at ${store ? store.name : 'store'}</div>
+          <div class="cart-line__store">${t('cart.pickupAt')}${store ? store.name : t('modal.storeDefault')}</div>
           ${addOnChips ? `<ul class="cart-line__addons">${addOnChips}</ul>` : ''}
           <div class="cart-line__qty">
-            <button type="button" class="qty-btn" data-action="cart-dec" data-line-id="${line.lineId}" aria-label="Decrease quantity">−</button>
+            <button type="button" class="qty-btn" data-action="cart-dec" data-line-id="${line.lineId}" aria-label="${t('cart.decQty')}">−</button>
             <span class="qty-val">${line.qty}</span>
-            <button type="button" class="qty-btn" data-action="cart-inc" data-line-id="${line.lineId}" aria-label="Increase quantity">+</button>
-            <button type="button" class="cart-line__remove" data-action="cart-remove-line" data-line-id="${line.lineId}">Remove</button>
+            <button type="button" class="qty-btn" data-action="cart-inc" data-line-id="${line.lineId}" aria-label="${t('cart.incQty')}">+</button>
+            <button type="button" class="cart-line__remove" data-action="cart-remove-line" data-line-id="${line.lineId}">${t('cart.remove')}</button>
           </div>
         </div>
       </article>
@@ -339,9 +342,9 @@
               <path d="M16 10a4 4 0 0 1-8 0"/>
             </svg>
           </div>
-          <h3>Your cart is empty</h3>
-          <p>Add a drink or pastry from the menu to get started.</p>
-          <button class="btn btn--primary" type="button" data-action="close-cart">Browse menu</button>
+          <h3>${t('cart.empty')}</h3>
+          <p>${t('cart.emptySub')}</p>
+          <button class="btn btn--primary" type="button" data-action="close-cart">${t('cart.browse')}</button>
         </div>`;
       if (foot) foot.hidden = true;
     } else {
@@ -503,23 +506,23 @@
       wrap.classList.remove('has-error');
       const v = (el.value || '').trim();
       if (key === 'name' && v.length < 2) {
-        err.textContent = 'Please enter your name';
+        err.textContent = t('checkout.errName');
         wrap.classList.add('has-error');
         ok = false;
       } else if (key === 'phone') {
         // Permissive phone check: 7+ digits
         const digits = v.replace(/\D/g, '');
         if (digits.length < 7) {
-          err.textContent = 'Please enter a valid phone';
+          err.textContent = t('checkout.errPhone');
           wrap.classList.add('has-error');
           ok = false;
         }
       } else if (key === 'address' && v.length < 5) {
-        err.textContent = 'Please enter a pickup address';
+        err.textContent = t('checkout.errAddress');
         wrap.classList.add('has-error');
         ok = false;
       } else if (key === 'store' && !v) {
-        err.textContent = 'Please choose a store';
+        err.textContent = t('checkout.errStore');
         wrap.classList.add('has-error');
         ok = false;
       }
@@ -558,7 +561,7 @@
         lineId: l.lineId,
         itemId: l.itemId,
         storeId: l.storeId,
-        name: getItem(l.itemId)?.name || 'Item',
+        name: getItem(l.itemId)?.name || t('misc.itemDefault'),
         qty: l.qty,
         addOnIds: [...(l.addOnIds || [])],
         unitPrice: lineUnitPrice(l),
@@ -578,12 +581,12 @@
     const storeObj = window.DATA.stores.find(s => s.id === order.customer.store);
     if (ps) ps.textContent = storeObj ? `${storeObj.name}` : '—';
     if (pw) pw.textContent = ({
-      asap: 'as soon as it’s ready',
-      '15': 'in 15 minutes',
-      '30': 'in 30 minutes',
-      '45': 'in 45 minutes',
-      '60': 'in 1 hour',
-    })[order.customer.when] || '—';
+      asap: t(‘time.asap’),
+      ‘15’: t(‘time.15’),
+      ‘30’: t(‘time.30’),
+      ‘45’: t(‘time.45’),
+      ‘60’: t(‘time.60’),
+    })[order.customer.when] || ‘—‘;
     setCheckoutStep('success');
   }
 
@@ -670,9 +673,9 @@
     if (!canSubmit('auth-login')) return;
     const em = $('#login-email')?.value?.trim();
     const pw = $('#login-password')?.value;
-    if (!em) { authFieldError('login', 'email', 'Enter your email'); return; }
-    if (!pw) { authFieldError('login', 'password', 'Enter your password'); return; }
-    if (!cloud) { showAuthError('Auth is not configured.'); return; }
+    if (!em) { authFieldError('login', 'email', t('auth.errEmail')); return; }
+    if (!pw) { authFieldError('login', 'password', t('auth.errPass')); return; }
+    if (!cloud) { showAuthError(t('auth.notConfigured')); return; }
 
     setBusy('login', true);
     const { error } = await cloud.auth.signInWithPassword({ email: em, password: pw });
@@ -697,12 +700,12 @@
 
     // Client-side validation (mirrors what we had)
     let ok = true;
-    if (name.length < 2) { authFieldError('signup', 'name', 'Enter your name (2+ chars)'); ok = false; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { authFieldError('signup', 'email', 'Enter a valid email'); ok = false; }
-    if (pw.length < 8) { authFieldError('signup', 'password', 'Password must be 8+ characters'); ok = false; }
+    if (name.length < 2) { authFieldError('signup', 'name', t('auth.errName')); ok = false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { authFieldError('signup', 'email', t('auth.errEmailValid')); ok = false; }
+    if (pw.length < 8) { authFieldError('signup', 'password', t('auth.errPassLen')); ok = false; }
     if (!ok) return;
 
-    if (!cloud) { showAuthError('Auth is not configured.'); return; }
+    if (!cloud) { showAuthError(t('auth.notConfigured')); return; }
 
     setBusy('signup', true);
     const { data, error } = await cloud.auth.signUp({
@@ -726,7 +729,7 @@
     e.preventDefault();
     if (!canSubmit('auth-forgot')) return;
     const em = $('#login-email')?.value?.trim();
-    if (!em) { authFieldError('login', 'email', 'Enter your email above first'); return; }
+    if (!em) { authFieldError('login', 'email', t('auth.errResetEmail')); return; }
     if (!cloud) return;
 
     const { error } = await cloud.auth.resetPasswordForEmail(em);
@@ -735,7 +738,7 @@
       return;
     }
     // Show success inline
-    const msg = 'Password reset link sent — check your email.';
+    const msg = t('auth.resetSent');
     const errEl = $('#loginForm [name="email"]').closest('.form__group').querySelector('.form__error');
     if (errEl) {
       errEl.textContent = msg;
@@ -747,7 +750,7 @@
   function setLoggedIn(name) {
     const btn = $('#navLogin');
     const mBtn = $('#mobileLogin');
-    const label = name || 'Logged in';
+    const label = name || t('auth.loggedIn');
     if (btn) { btn.textContent = label; btn.classList.add('is-user'); }
     if (mBtn) { mBtn.textContent = label; mBtn.classList.add('is-user'); }
   }
@@ -755,8 +758,8 @@
   function setLoggedOut() {
     const btn = $('#navLogin');
     const mBtn = $('#mobileLogin');
-    if (btn) { btn.textContent = 'Login'; btn.classList.remove('is-user'); }
-    if (mBtn) { mBtn.textContent = 'Login'; mBtn.classList.remove('is-user'); }
+    if (btn) { btn.textContent = t('nav.login'); btn.classList.remove('is-user'); }
+    if (mBtn) { mBtn.textContent = t('nav.login'); mBtn.classList.remove('is-user'); }
   }
 
   // Nav login buttons: open modal if logged out, logout if logged in
@@ -811,7 +814,7 @@
     cloud.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         const meta = session.user.user_metadata || {};
-        const name = meta.full_name || session.user.email?.split('@')[0] || 'Logged in';
+        const name = meta.full_name || session.user.email?.split('@')[0] || t('auth.loggedIn');
         setLoggedIn(name);
       } else {
         setLoggedOut();
@@ -974,7 +977,7 @@
       // build dots
       const b = document.createElement('button');
       b.type = 'button';
-      b.setAttribute('aria-label', `Show ${s.name}`);
+      b.setAttribute('aria-label', `${t('stores.show')} ${s.name}`);
       if (i === 0) b.classList.add('is-active');
       b.addEventListener('click', () => goStore(i, true));
       storeDotsBox.appendChild(b);
@@ -1001,7 +1004,7 @@
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             <a href="tel:${s.phone.replace(/[^\d+]/g, '')}">${s.phone}</a>
           </div>
-          <div class="store-card__order">Order from this store →</div>
+          <div class="store-card__order">${t('stores.orderFrom')}</div>
         </div>
       `;
       // store card click → scroll to menu (cart flow handles store selection later)
@@ -1081,7 +1084,7 @@
         currentStoreId = e.target.value;
         modalContinue.disabled = false;
         const hint = $('#storeHint');
-        if (hint) hint.textContent = `Pickup at ${STORES.find(x => x.id === currentStoreId).name}.`;
+        if (hint) hint.textContent = `${t('modal.pickupAt')} ${STORES.find(x => x.id === currentStoreId).name}.`;
       });
       storePicker.appendChild(label);
     });
@@ -1097,7 +1100,7 @@
     const longDesc = cardEl.dataset.descLong ?? desc;
     const img      = cardEl.dataset.img ?? cardEl.querySelector('img')?.src ?? '';
     const category = cardEl.dataset.category ?? '';
-    const catLabel = category ? category[0].toUpperCase() + category.slice(1) : 'From the menu';
+    const catLabel = category ? category[0].toUpperCase() + category.slice(1) : t('modal.fromMenu').replace(/[—\-]/g, '').trim();
 
     $('#modalImg').src = img;
     $('#modalImg').alt = title;
@@ -1115,10 +1118,10 @@
     // if defaulting to a real store, enable continue
     if (defaultStore && STORES.find(s => s.id === defaultStore)) {
       modalContinue.disabled = false;
-      $('#storeHint').textContent = `Pickup at ${STORES.find(s => s.id === defaultStore).name}.`;
+      $('#storeHint').textContent = `${t('modal.pickupAt')} ${STORES.find(s => s.id === defaultStore).name}.`;
     } else {
       modalContinue.disabled = true;
-      $('#storeHint').textContent = 'Pick a store to continue.';
+      $('#storeHint').textContent = t('modal.pickStore');
     }
 
     // reset to step 1
@@ -1205,7 +1208,7 @@
     // build dots
     reviews.forEach((_, i) => {
       const b = document.createElement('button');
-      b.setAttribute('aria-label', `Go to review ${i + 1}`);
+      b.setAttribute('aria-label', `${t('reviews.goTo')} ${i + 1}`);
       if (i === 0) b.classList.add('is-active');
       b.addEventListener('click', () => goTo(i, true));
       dotsBox.appendChild(b);
@@ -1290,10 +1293,10 @@
     const submitError = $('#formSubmitError');
     const submitBtn = $('#submitBtn');
     const rules = {
-      name:    v => v.trim().length >= 2 || 'Please enter your name',
-      email:   v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || 'Please enter a valid email',
-      topic:   v => v !== '' || 'Please pick a topic',
-      message: v => v.trim().length >= 10 || 'Message should be at least 10 characters',
+      name:    v => v.trim().length >= 2 || t('contact.errName'),
+      email:   v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || t('contact.errEmail'),
+      topic:   v => v !== '' || t('contact.errTopic'),
+      message: v => v.trim().length >= 10 || t('contact.errMsg'),
     };
 
     function validateField(name) {
@@ -1389,7 +1392,7 @@
 
   const themeBtn = document.createElement('button');
   themeBtn.className = 'theme-toggle';
-  themeBtn.setAttribute('aria-label', 'Toggle dark mode');
+  themeBtn.setAttribute('aria-label', t('misc.darkMode'));
   themeBtn.innerHTML = `
     <svg class="i-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="5"/>
@@ -1539,7 +1542,7 @@
       renderMenu();
       // Subscribe to future changes
       window.EOMenu.onChange(() => {
-        renderMenu();
+        renderApp();
         // Re-apply filter since menu cards were replaced
         const filter = $('.filter.is-active')?.dataset.filter || 'all';
         $$('.menu-card').forEach(card => {
@@ -1549,5 +1552,37 @@
       });
     });
   }
+
+  // ---------- Cookie consent banner ----------
+  (function initCookieConsent() {
+    const CONSENT_KEY = 'eo-cookie-consent';
+    const banner = $('#cookieBanner');
+    if (!banner) return;
+    if (localStorage.getItem(CONSENT_KEY)) return; // already decided
+    banner.hidden = false;
+    $$('[data-consent]', banner).forEach(btn => {
+      btn.addEventListener('click', () => {
+        localStorage.setItem(CONSENT_KEY, btn.dataset.consent);
+        banner.hidden = true;
+      });
+    });
+  })();
+
+  // ---------- i18n: renderApp + language change listener ----------
+  function renderApp() {
+    renderMenu();
+    renderAbout();
+    renderReviews();
+    renderCart();
+    populateStoreOptions();
+    // Re-apply active menu filter
+    const filter = $('.filter.is-active')?.dataset.filter || 'all';
+    $$('.menu-card').forEach(card => {
+      const match = filter === 'all' || card.dataset.category === filter;
+      card.classList.toggle('is-hidden', !match);
+    });
+  }
+
+  window.addEventListener('eo:languagechange', renderApp);
 
 })();

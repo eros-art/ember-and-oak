@@ -1947,6 +1947,39 @@ body.dark .cart-drawer__foot { background: #1a0f0a; }
 /* Body lock when drawer is open */
 body.drawer-open { overflow: hidden; }
 
+/* Language switcher */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid transparent;
+}
+.lang-switch__opt {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font: 600 0.72rem var(--font-body);
+  line-height: 1;
+  padding: 6px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+}
+.lang-switch__opt:hover { color: var(--steam); }
+.lang-switch__opt.is-active { background: var(--copper); color: var(--steam); }
+.nav.is-scrolled .lang-switch { background: var(--latte); }
+.nav.is-scrolled .lang-switch__opt { color: var(--fg); }
+.nav.is-scrolled .lang-switch__opt.is-active { color: var(--steam); }
+/* spacer so the pill doesn't crowd cart/CTA */
+.nav__actions .lang-switch { margin-right: 6px; }
+/* mobile: full-width variant inside .mobile-menu */
+.mobile-menu .lang-switch { margin: 6px 0 2px; }
+.lang-switch--mobile { width: 100%; justify-content: center; }
+.lang-switch--mobile .lang-switch__opt { flex: 1; }
+
 /* Responsive tweaks for the drawer */
 @media (max-width: 560px) {
   .cart-drawer { max-width: 100%; }
@@ -2249,4 +2282,85 @@ body.dark .auth__title { color: var(--steam); }
   .auth-modal { padding: 0; align-items: flex-end; }
   .auth-modal .modal__dialog { max-width: 100%; max-height: 96vh; border-radius: 20px 20px 0 0; }
   .auth { padding: 40px 24px 32px; }
+}
+
+/* ===== FOOTER LEGAL LINKS ===== */
+.footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 18px;
+  font-size: 0.85rem;
+}
+.footer__legal a {
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  transition: color 0.25s var(--ease);
+}
+.footer__legal a:hover {
+  color: var(--copper);
+}
+
+/* ===== COOKIE CONSENT BANNER ===== */
+.cookie-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 999;
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--espresso);
+  color: var(--cream);
+  border: 1px solid rgba(243, 236, 226, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(20, 10, 6, 0.45);
+  padding: 18px 20px;
+}
+.cookie-banner__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cookie-banner__text strong {
+  font-family: var(--font-head);
+  color: var(--steam);
+  font-size: 1.05rem;
+  display: block;
+  margin-bottom: 6px;
+}
+.cookie-banner__text p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.8);
+}
+.cookie-banner__links {
+  margin-top: 8px;
+  font-size: 0.85rem;
+}
+.cookie-banner__links a {
+  color: var(--copper);
+}
+.cookie-banner__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cookie-banner__actions .btn {
+  flex: 1 1 140px;
+}
+body.dark .cookie-banner {
+  background: #120a06;
+  border-color: rgba(243, 236, 226, 0.10);
+}
+@media (min-width: 560px) {
+  .cookie-banner__inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cookie-banner__actions {
+    flex: 1 1 200px;
+  }
 }
