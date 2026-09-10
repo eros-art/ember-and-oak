@@ -1,0 +1,14 @@
+[write]
+# Supabase project that hosts the iyzico payment Edge Functions.
+project_id = "sqozjjlxpelgiedjxtre"
+
+# The two payment functions run WITHOUT Supabase JWT verification:
+#   - iyzico-checkout is called from the customer's browser (anon key), and the
+#     real authority is the iyzico secret key held server-side.
+#   - iyzico-webhook is called by iyzico's servers, which send no Supabase JWT;
+#     it verifies the iyzico HMAC signature instead.
+[functions.iyzico-checkout]
+verify_jwt = false
+
+[functions.iyzico-webhook]
+verify_jwt = false

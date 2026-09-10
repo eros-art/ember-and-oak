@@ -1,0 +1,6 @@
+# Supabase CLI local state — never commit these
+.temp/
+.branches/
+.env*
+!functions/**/.env.example
+*.local
