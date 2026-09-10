@@ -616,6 +616,12 @@
           </div>
 
           <div class="form__group">
+            <label for="co-email" data-i18n="checkout.email">Email</label>
+            <input type="email" id="co-email" name="email" placeholder="you@example.com" autocomplete="email" data-i18n-placeholder="checkout.emailPlaceholder" />
+            <span class="form__error" data-error-for="email"></span>
+          </div>
+
+          <div class="form__group">
             <label for="co-address" data-i18n="checkout.address">Pickup address</label>
             <input type="text" id="co-address" name="address" placeholder="123 Main St" autocomplete="street-address" required minlength="5" data-i18n-placeholder="checkout.addrPlaceholder" />
             <span class="form__error" data-error-for="address"></span>
@@ -665,6 +671,25 @@
         </form>
       </div>
 
+      <div class="checkout__step checkout__step--pay" data-step="pay">
+        <p class="eyebrow" data-i18n="checkout.eyebrow">— Checkout —</p>
+        <h2 class="checkout__title" data-i18n="checkout.payTitle">One last step</h2>
+        <p class="checkout__sub" data-i18n="checkout.paySub">Your order is placed. Choose how to pay.</p>
+
+        <div class="checkout__pay-choices" id="coPayChoices">
+          <button type="button" class="btn btn--primary btn--lg btn--block" id="co-pay-now" data-i18n="checkout.payNow">Pay now (QR / card)</button>
+          <button type="button" class="btn btn--ghost btn--lg btn--block" id="co-pay-later" data-i18n="checkout.payAtPickup">Pay at pickup</button>
+        </div>
+
+        <div class="checkout__pay-frame" id="coPayFrame" hidden></div>
+
+        <p class="checkout__pay-pending" id="coPayPending" data-i18n="checkout.payWait" hidden>Waiting for payment…</p>
+        <p class="checkout__pay-done" id="coPayManual" hidden>
+          <button type="button" class="btn btn--primary btn--lg btn--block" data-i18n="checkout.payDoneManual">I've finished paying — continue</button>
+        </p>
+        <p class="form__submit-error" id="coPayError" hidden data-i18n="checkout.payError">Online payment isn't available right now — you can pay at pickup.</p>
+      </div>
+
       <div class="checkout__step checkout__step--success" data-step="success">
         <div class="success__check" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -672,6 +697,7 @@
         <h2 class="checkout__title" data-i18n="checkout.orderPlaced">Order placed</h2>
         <p class="checkout__sub"><span data-i18n="checkout.thanks">Thanks! Your order</span> <strong id="co-order-id">EO-0000</strong> <span data-i18n="checkout.preparing">is being prepared.</span></p>
         <p class="checkout__sub checkout__sub--muted"><span data-i18n="checkout.summaryPickup">Pickup at</span> <strong id="co-pickup-store">—</strong> · <span id="co-pickup-when">—</span></p>
+        <p class="checkout__sub checkout__pay-note" id="co-payment-note" hidden></p>
 
         <div class="checkout__actions">
           <button class="btn btn--primary btn--lg" type="button" data-action="close-checkout-and-continue" data-i18n="checkout.keepBrowsing">Keep browsing</button>

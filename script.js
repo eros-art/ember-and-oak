@@ -460,6 +460,11 @@
   function closeCheckout() {
     if (checkoutModal) checkoutModal.hidden = true;
     document.body.classList.remove('drawer-open');
+    // Clean up any ongoing payment iframe / listener
+    stopPayListener();
+    const frame = $('#coPayFrame');
+    if (frame) frame.innerHTML = '';
+    currentOrder = null;
   }
 
   function setCheckoutStep(step) {
@@ -552,6 +557,7 @@
       customer: {
         name:    (data.name || '').trim(),
         phone:   (data.phone || '').trim(),
+        email:   (data.email || '').trim(),
         address: (data.address || '').trim(),
         store:   data.store || null,
         when:    data.when || 'asap',
@@ -573,21 +579,167 @@
     saveOrders(orders);
     syncOrderToCloud(order);
 
-    // Show success step
+    // Either they already paid at checkout, or we route through the
+    // payment step (Pay now / Pay at pickup).
+    showPayStep(order);
+    return order;
+  }
+
+  /* ==========================================================
+     Payment step (iyzico) — "Pay now (QR / card)" or "Pay at pickup".
+     The order is always placed first (pending/unpaid); online payment
+     is optional. Paying now embeds iyzico's Common Payment Page (which
+     renders both QR and card); confirmation arrives server-side via the
+     iyzico webhook, which we watch through Supabase realtime.
+     ========================================================== */
+  let currentOrder = null;
+  let payChannel = null;
+
+  function payEmailValid() {
+    const el = $('#co-email');
+    const v = (el?.value || '').trim();
+    const ok = /.+@.+\..+/.test(v);
+    const wrap = el?.closest('.form__group');
+    const err = wrap?.querySelector('.form__error');
+    if (err) {
+      err.textContent = ok ? '' : t('checkout.errEmail');
+      err.style.display = ok ? '' : 'block';
+      wrap?.classList.toggle('has-error', !ok);
+    }
+    return ok;
+  }
+
+  function resetPayStep() {
+    const choices = $('#coPayChoices'), frame = $('#coPayFrame'),
+          pending = $('#coPayPending'), manual = $('#coPayManual'), err = $('#coPayError');
+    if (choices) choices.hidden = false;
+    if (frame) { frame.hidden = true; frame.innerHTML = ''; }
+    if (pending) pending.hidden = true;
+    if (manual) manual.hidden = true;
+    if (err) err.hidden = true;
+  }
+
+  function showPayStep(order) {
+    currentOrder = order;
+    resetPayStep();
+    setCheckoutStep('pay');
+  }
+
+  function finishCheckout(order, paid) {
     const oid = $('#co-order-id');
     const ps  = $('#co-pickup-store');
     const pw  = $('#co-pickup-when');
+    const note = $('#co-payment-note');
     if (oid) oid.textContent = order.id;
-    const storeObj = window.DATA.stores.find(s => s.id === order.customer.store);
-    if (ps) ps.textContent = storeObj ? `${storeObj.name}` : '—';
-    if (pw) pw.textContent = ({
-      asap: t(‘time.asap’),
-      ‘15’: t(‘time.15’),
-      ‘30’: t(‘time.30’),
-      ‘45’: t(‘time.45’),
-      ‘60’: t(‘time.60’),
-    })[order.customer.when] || ‘—‘;
+    const storeObj = window.DATA && window.DATA.stores.find(s => s.id === order.customer.store);
+    if (ps) ps.textContent = storeObj ? storeObj.name : (order.customer.store || '—');
+    if (pw) pw.textContent = ({ asap: t('time.asap'), '15': t('time.15'), '30': t('time.30'), '45': t('time.45'), '60': t('time.60') })[order.customer.when] || '—';
+    if (note) {
+      note.textContent = paid ? t('checkout.paidOnline') : t('checkout.payAtPickupNote');
+      note.classList.toggle('is-paid', !!paid);
+      note.hidden = false;
+    }
+    stopPayListener();
     setCheckoutStep('success');
+  }
+
+  function payAtPickup() {
+    stopPayListener();
+    if (!currentOrder) return;
+    finishCheckout(currentOrder, false);
+  }
+
+  function subscribePaid(order) {
+    stopPayListener();
+    if (!cloud || !order || !order.id) return;
+    const filter = 'eo_id=eq.' + encodeURIComponent(order.id);
+    payChannel = cloud.channel('eo-pay-' + order.id)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders', filter },
+        (payload) => {
+          if (payload.new && payload.new.paid === true) {
+            finishCheckout(currentOrder || order, true);
+          }
+        })
+      .subscribe();
+  }
+
+  function stopPayListener() {
+    if (payChannel && cloud) { try { cloud.removeChannel(payChannel); } catch { /* ignore */ } }
+    payChannel = null;
+  }
+
+  async function startPayNow() {
+    if (!currentOrder) return;
+    const errEl = $('#coPayError');
+    const pendingEl = $('#coPayPending');
+    const choicesEl = $('#coPayChoices');
+    // iyzico needs the buyer's email — if missing, send them back to the form.
+    if (!payEmailValid()) {
+      setCheckoutStep('form');
+      $('#co-email')?.focus();
+      return;
+    }
+    if (pendingEl) pendingEl.hidden = false;
+    if (choicesEl) choicesEl.hidden = true;
+
+    const order = currentOrder;
+    const payload = {
+      order: {
+        eo_id: order.id,
+        userId: order.userId || null,
+        total: order.total,
+        items: order.items || [],
+        customer: {
+          name: order.customer.name || '',
+          email: order.customer.email || '',
+          phone: order.customer.phone || '',
+          address: order.customer.address || '',
+        },
+      },
+    };
+
+    let res;
+    try {
+      res = await (cloud && cloud.functions && order.id
+        ? cloud.functions.invoke('iyzico-checkout', { body: payload })
+        : Promise.reject(new Error('cloud unsupported')));
+    } catch (e) {
+      if (pendingEl) pendingEl.hidden = true;
+      if (errEl) errEl.hidden = false;
+      if (choicesEl) choicesEl.hidden = false;
+      return;
+    }
+
+    const data = res && (res.data || res);
+    if (!data || !data.ok || !data.paymentPageUrl) {
+      const errTxt = (data && data.error && (data.error.errorMessage || data.error.errorCode)) || 'payment init failed';
+      console.warn('[pay] checkout init failed:', errTxt);
+      if (pendingEl) pendingEl.hidden = true;
+      if (errEl) errEl.hidden = false;
+      if (choicesEl) choicesEl.hidden = false;
+      return;
+    }
+
+    if (pendingEl) pendingEl.hidden = true;
+    // Embed iyzico's Common Payment Page — renders QR + card for the enabled
+    // methods — inside a frame.
+    const sep = data.paymentPageUrl.includes('?') ? '&' : '?';
+    const src = data.paymentPageUrl + sep + 'iframe=true';
+    const frame = $('#coPayFrame');
+    const manualEl = $('#coPayManual');
+    if (frame) {
+      frame.hidden = false;
+      frame.innerHTML = '';
+      const ifr = document.createElement('iframe');
+      ifr.src = src;
+      ifr.setAttribute('allowpaymentrequest', 'true');
+      ifr.setAttribute('frameborder', '0');
+      ifr.setAttribute('scrolling', 'no');
+      frame.appendChild(ifr);
+    }
+    if (manualEl) manualEl.hidden = false;   // fallback if realtime is blocked
+    subscribePaid(order);
   }
 
   // Delegated checkout actions
@@ -603,6 +755,9 @@
         updateCartBadge();
         renderCart();
         break;
+      case 'pay-now':                    startPayNow(); break;
+      case 'pay-later':                  payAtPickup(); break;
+      case 'pay-manual':                 finishCheckout(currentOrder, true); break;
     }
   }
 
