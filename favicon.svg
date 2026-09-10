@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- espresso squircle background -->
+  <rect width="512" height="512" rx="110" fill="#2C1810"/>
+
+  <!-- steam (copper) -->
+  <g stroke="#C67B4E" stroke-width="26" stroke-linecap="round" fill="none">
+    <path d="M196 140 L196 194"/>
+    <path d="M256 128 L256 186"/>
+    <path d="M316 140 L316 194"/>
+  </g>
+
+  <!-- mug body (cream) -->
+  <path d="M150 252 L362 252 L355 428 Q354 440 340 440 L172 440 Q158 440 157 428 Z" fill="#F5F0E8"/>
+
+  <!-- coffee surface (copper-dark) -->
+  <path d="M163 278 L349 278" stroke="#A65D35" stroke-width="20" stroke-linecap="round"/>
+
+  <!-- handle (cream outline, right) -->
+  <path d="M362 288 a86 86 0 0 1 0 150 h-10" fill="none" stroke="#F5F0E8" stroke-width="26" stroke-linecap="round"/>
+</svg>

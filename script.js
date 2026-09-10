@@ -23,6 +23,15 @@
     ? window.supabase.createClient(window.EO_SUPABASE.url, window.EO_SUPABASE.anonKey)
     : null;
 
+  // ---------- Anti-spam ----------
+  const pageLoadTime = Date.now();
+  function isBot(form) {
+    const honeypot = form.querySelector('.anti-bot');
+    if (honeypot && honeypot.value) return true;
+    if (Date.now() - pageLoadTime < 3000) return true;
+    return false;
+  }
+
   function syncOrderToCloud(order) {
     if (!cloud || !order) return Promise.resolve();
     return cloud.from('orders').insert({
@@ -1278,6 +1287,7 @@
   const form = $('#contactForm');
   if (form) {
     const success = $('#formSuccess');
+    const submitError = $('#formSubmitError');
     const submitBtn = $('#submitBtn');
     const rules = {
       name:    v => v.trim().length >= 2 || 'Please enter your name',
@@ -1321,7 +1331,7 @@
 
   form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!canSubmit('contact')) {
+      if (!canSubmit('contact') || isBot(form)) {
         return;
       }
       const allOk = Object.keys(rules).every(validateField);
@@ -1342,23 +1352,33 @@
       };
 
       // Save to Supabase if available
+      let saved = false;
       if (cloud) {
         try {
           await cloud.from('messages').insert(formData);
+          saved = true;
         } catch (e) {
           console.warn('[contact] save failed:', e.message);
         }
       }
 
-      // Show success regardless (form was validated)
       submitBtn.classList.remove('is-loading');
       submitBtn.disabled = false;
-      success.hidden = false;
-      success.style.animation = 'none';
-      void success.offsetWidth;
-      success.style.animation = 'fadeUp 0.5s var(--ease)';
-      form.reset();
-      setTimeout(() => { success.hidden = true; }, 6000);
+
+      if (saved) {
+        success.hidden = false;
+        success.style.animation = 'none';
+        void success.offsetWidth;
+        success.style.animation = 'fadeUp 0.5s var(--ease)';
+        form.reset();
+        setTimeout(() => { success.hidden = true; }, 6000);
+      } else {
+        submitError.hidden = false;
+        submitError.style.animation = 'none';
+        void submitError.offsetWidth;
+        submitError.style.animation = 'fadeUp 0.5s var(--ease)';
+        setTimeout(() => { submitError.hidden = true; }, 6000);
+      }
     });
   }
 
@@ -1492,6 +1512,7 @@
   if (checkoutForm) {
     checkoutForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      if (isBot(checkoutForm)) return;
       const btn = $('#co-submit');
       if (btn) {
         btn.classList.add('is-loading');
@@ -1529,7 +1550,4 @@
     });
   }
 
-  // Console hello
-  console.log('%cEmber & Oak', 'color:#C67B4E;font-family:Georgia;font-size:18px;font-weight:bold');
-  console.log('Welcome to the dev console. Coffee\'s on us.');
 })();

@@ -987,6 +987,31 @@ body.dark .form__success {
   color: #6cd28e;
   background: rgba(108, 210, 142, 0.1);
 }
+.form__submit-error {
+  margin-top: 16px;
+  text-align: center;
+  padding: 14px;
+  background: rgba(192, 57, 43, 0.12);
+  color: #c0392b;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  font-weight: 500;
+  animation: fadeUp 0.4s var(--ease);
+}
+body.dark .form__submit-error {
+  color: #e74c3c;
+  background: rgba(192, 57, 43, 0.1);
+}
+.anti-bot {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+  tab-index: -1;
+}
 
 /* ===== FOOTER ===== */
 .footer {

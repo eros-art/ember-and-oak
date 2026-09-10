@@ -343,8 +343,13 @@
           <span class="btn__spinner" aria-hidden="true"></span>
         </button>
 
+        <input type="text" name="website" class="anti-bot" tabindex="-1" autocomplete="off" aria-hidden="true">
+
         <p class="form__success" id="formSuccess" hidden>
           ✓ Thanks! Your message is on its way. We'll be in touch soon.
+        </p>
+        <p class="form__submit-error" id="formSubmitError" hidden>
+          Something went wrong. Please try again or email us directly.
         </p>
       </form>
     </div>
@@ -570,6 +575,8 @@
             <label for="co-notes">Notes <span class="form__opt">(optional)</span></label>
             <textarea id="co-notes" name="notes" rows="2" placeholder="Extra foam, less sugar, etc."></textarea>
           </div>
+
+          <input type="text" name="fax_number" class="anti-bot" tabindex="-1" autocomplete="off" aria-hidden="true">
 
           <div class="checkout__summary">
             <div class="checkout__summary-row">
