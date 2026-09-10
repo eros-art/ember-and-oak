@@ -12,6 +12,51 @@
   <link rel="manifest" href="site.webmanifest">
   <meta name="theme-color" content="#2C1810">
 
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Ember & Oak Coffee — Brewed with Intention">
+  <meta property="og:description" content="A cozy Third Wave coffee house serving single-origin coffee, specialty drinks, and homemade pastries.">
+  <meta property="og:image" content="og-image.png">
+  <meta property="og:url" content="https://ember-and-oak-1va.pages.dev/">
+  <meta property="og:site_name" content="Ember & Oak Coffee">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ember & Oak Coffee — Brewed with Intention">
+  <meta name="twitter:description" content="A cozy Third Wave coffee house serving single-origin coffee, specialty drinks, and homemade pastries.">
+  <meta name="twitter:image" content="og-image.png">
+
+  <!-- Schema.org structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CoffeeShop",
+    "name": "Ember & Oak Coffee",
+    "description": "A cozy Third Wave coffee house serving single-origin coffee, specialty drinks, and homemade pastries.",
+    "url": "https://ember-and-oak-1va.pages.dev/",
+    "image": "https://ember-and-oak-1va.pages.dev/og-image.png",
+    "priceRange": "$$",
+    "servesCuisine": "Coffee",
+    "telephone": "[Phone]",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "[Address]",
+      "addressLocality": "[City]",
+      "addressRegion": "[Region]",
+      "postalCode": "[Postal Code]",
+      "addressCountry": "[Country]"
+    },
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+        "opens": "07:00",
+        "closes": "19:00"
+      }
+    ]
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
@@ -351,6 +396,8 @@
 
         <input type="text" name="website" class="anti-bot" tabindex="-1" autocomplete="off" aria-hidden="true">
 
+        <p class="form__legal">Submitting sends your name, e-mail and message to <span class="ph">[Business legal name]</span>. See our <a href="../legal/privacy-policy.html">Privacy Policy</a>.</p>
+
         <p class="form__success" id="formSuccess" hidden>
           ✓ Thanks! Your message is on its way. We'll be in touch soon.
         </p>
@@ -385,6 +432,13 @@
         <a href="#" aria-label="TikTok">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
         </a>
+      </div>
+      <div class="footer__legal" aria-label="Legal documents">
+        <a href="../legal/index.html">Legal Centre</a>
+        <a href="../legal/privacy-policy.html">Privacy Policy</a>
+        <a href="../legal/cookie-policy.html">Cookie Policy</a>
+        <a href="../legal/terms.html">Terms of Use</a>
+        <a href="../legal/return-policy.html">Returns &amp; Refunds</a>
       </div>
       <p class="footer__copy">© 2026 Ember &amp; Oak. All rights reserved.</p>
     </div>
@@ -599,7 +653,7 @@
             <span class="btn__label">Place order</span>
             <span class="btn__spinner" aria-hidden="true"></span>
           </button>
-          <p class="form__legal">Demo only — no real order is placed.</p>
+          <p class="form__legal">By placing this order you accept the <a href="../legal/distance-selling-contract.html">Distance Selling Contract</a> and our <a href="../legal/return-policy.html">Return &amp; Refund Policy</a>.</p>
         </form>
       </div>
 
@@ -682,11 +736,31 @@
               <span class="form__error" data-error-for="password"></span>
             </div>
             <button type="submit" class="btn btn--primary btn--lg btn--block">Create account</button>
+            <p class="form__legal">Creating an account means you accept the <a href="../legal/terms.html">Terms of Use</a> and our <a href="../legal/privacy-policy.html">Privacy Policy</a>. For marketing messages we ask separately.</p>
             <p class="auth__links">
               <a href="#" id="goToLogin">Already have an account? Log in</a>
             </p>
           </form>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COOKIE CONSENT BANNER ===== -->
+  <div class="cookie-banner" id="cookieBanner" hidden role="region" aria-label="Cookie consent">
+    <div class="cookie-banner__inner">
+      <div class="cookie-banner__text">
+        <strong>Your privacy</strong>
+        <p>We use essential browser storage so the cart, login and orders work. We don't currently use advertising or analytics cookies — any optional cookies we may add will only run with your consent.</p>
+        <p class="cookie-banner__links">
+          <a href="../legal/cookie-policy.html">Cookie Policy</a>
+          <span aria-hidden="true">·</span>
+          <a href="../legal/privacy-policy.html">Privacy Policy</a>
+        </p>
+      </div>
+      <div class="cookie-banner__actions">
+        <button type="button" class="btn btn--primary" data-consent="accept">Accept</button>
+        <button type="button" class="btn btn--ghost" data-consent="decline">Decline</button>
       </div>
     </div>
   </div>
