@@ -95,6 +95,7 @@
         ? `<button type="button" class="adm__mini adm__mini--done" data-action="order-done" data-id="${esc(o.id)}">${t('admin.markDone')}</button>
            <button type="button" class="adm__mini adm__mini--cancel" data-action="order-cancel" data-id="${esc(o.id)}">${t('admin.cancel')}</button>`
         : `<button type="button" class="adm__mini adm__mini--reopen" data-action="order-reopen" data-id="${esc(o.id)}">${t('admin.reopen')}</button>`;
+      const notes = (o.customer && o.customer.notes || '').trim();
       return `
       <div class="orders__row is-${esc(o.status)}" data-order-id="${esc(o.id)}">
         <div class="orders__id">
@@ -106,6 +107,7 @@
           <span class="orders__store">${esc(storeName(o.customer.store))} · ${esc(pickLabel(o))}</span>
         </div>
         <div class="orders__items">${itemsSummary(o.items)}</div>
+        ${notes ? `<div class="orders__notes"><span class="orders__notes-label">${t('admin.notes')}:</span> ${esc(notes)}</div>` : ''}
         <div class="orders__right">
           <span class="orders__total">${fmtMoney(o.total)}</span>
           <span class="orders__badges">

@@ -195,6 +195,15 @@
     .orders__items ul { list-style: none; margin-top: 2px; }
     .orders__items li::before { content: '· '; color: var(--copper); }
 
+    .orders__notes {
+      grid-column: 1 / -1;
+      margin-top: 4px; padding-top: 8px;
+      border-top: 1px dashed var(--line);
+      color: var(--muted); font-size: 0.82rem; line-height: 1.5;
+      font-style: italic;
+    }
+    .orders__notes-label { color: var(--copper); font-weight: 600; font-style: normal; margin-right: 4px; }
+
     .orders__right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
     .orders__total { font-family: var(--font-head); font-size: 1.15rem; font-weight: 700; color: var(--roast); }
     body.dark .orders__total { color: var(--steam); }
@@ -660,12 +669,12 @@
     </div>
   </div>
 
-  <script src="../database/supabase-config.js"></script>
+  <script src="../supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../database/data.js"></script>
+  <script src="../data.js"></script>
   <script src="data.js"></script>
-  <script src="../customer/data-tr.js"></script>
-  <script src="../customer/i18n.js"></script>
+  <script src="../data-tr.js"></script>
+  <script src="../i18n.js"></script>
   <script src="orders.js"></script>
   <script src="dashboard.js"></script>
   <script>
