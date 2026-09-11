@@ -192,6 +192,16 @@
         if (btn.dataset.tab === 'sales') renderSales();
       });
     });
+
+    // Sales date range filter
+    document.querySelectorAll('.sales__filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sales__filter-btn').forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        salesRange = btn.dataset.range || 'all';
+        renderSales();
+      });
+    });
   }
 
   startAutoRefresh();
@@ -527,6 +537,25 @@
     return out;
   }
 
+  /* ---------- Sales date range state ---------- */
+  let salesRange = 'all'; // 'all' | 'today' | 'week' | 'month'
+
+  function filterOrdersByRange(orders, range) {
+    if (range === 'all') return orders;
+    const now = Date.now();
+    const dayMs = 86400000;
+    let cutoff;
+    if (range === 'today') {
+      const d = new Date(); d.setHours(0,0,0,0);
+      cutoff = d.getTime();
+    } else if (range === 'week') {
+      cutoff = now - 7 * dayMs;
+    } else if (range === 'month') {
+      cutoff = now - 30 * dayMs;
+    }
+    return orders.filter(o => o.ts >= cutoff);
+  }
+
   function renderSales() {
     const root = document.getElementById('salesPane');
     if (!root) return;
@@ -534,16 +563,18 @@
     let orders = [];
     try { orders = currentOrders(); } catch { orders = []; }
     const seeded = !useCloud() && (typeof A.isSeed === 'function') && A.isSeed();
-    const { totals, stores, items } = aggregate(orders);
+    const filtered = filterOrdersByRange(orders, salesRange);
+    const { totals, stores, items } = aggregate(filtered);
     const storesList = storesSorted(stores);
     const top = topItems(items, 5);
     const totalItemsSold = Object.values(items).reduce((sum, i) => sum + i.qty, 0);
-    const hasData = orders.length > 0;
+    const activeCount = filtered.length - totals.cancelledCount;
+    const hasData = filtered.length > 0;
 
     // Toolbar meta
     const meta = document.getElementById('salesMeta');
     if (meta) meta.textContent = hasData
-      ? `${totals.orderCount} ${totals.orderCount === 1 ? t('admin.item') : t('admin.items')} · ${totalItemsSold} ${t('admin.items')} · ${useCloud() ? t('admin.liveData') : (seeded ? t('admin.sampleDataShort') : t('admin.localData'))}`
+      ? `${activeCount} ${activeCount === 1 ? 'order' : 'orders'} · ${totalItemsSold} items sold`
       : t('admin.noDataYet');
 
     const chip = document.getElementById('salesSeedChip');
@@ -563,44 +594,71 @@
       return;
     }
 
-    // Stat cards (revenue, count, paid, unpaid — cancelled separated)
+    // --- 3 key metric cards ---
+    const avgOrder = activeCount > 0 ? totals.revenue / activeCount : 0;
+    const paidPct = totals.revenue > 0 ? Math.round((totals.paidRevenue / totals.revenue) * 100) : 0;
     const cards = [
-      { label: t('admin.totalRevenue'), value: fmtMoney(totals.revenue), hint: `${totals.orderCount - totals.cancelledCount} ${(totals.orderCount - totals.cancelledCount) === 1 ? t('admin.nonCancelled') : t('admin.nonCancelledPlural')}`, tone: 'primary' },
-      { label: t('admin.totalOrders'),  value: String(totals.orderCount),  hint: `${totals.cancelledCount} ${t('admin.cancelled')}`, tone: 'neutral' },
-      { label: t('admin.paid'),          value: fmtMoney(totals.paidRevenue), hint: `${totals.paidCount} ${t('admin.item')}${totals.paidCount === 1 ? '' : 's'}`, tone: 'paid' },
-      { label: t('admin.unpaid'),        value: fmtMoney(totals.unpaidRevenue), hint: `${totals.unpaidCount} ${t('admin.item')}${totals.unpaidCount === 1 ? '' : 's'}`, tone: 'unpaid' },
+      {
+        label: t('admin.totalRevenue'),
+        value: fmtMoney(totals.revenue),
+        hint: `${paidPct}% ${t('admin.paidOrders')} · ${fmtMoney(totals.paidRevenue)}`,
+        tone: 'primary',
+      },
+      {
+        label: t('admin.totalOrders'),
+        value: String(activeCount),
+        hint: `${totals.cancelledCount} ${t('admin.cancelledOrders')}`,
+        tone: 'neutral',
+      },
+      {
+        label: t('admin.avgOrder'),
+        value: fmtMoney(avgOrder),
+        hint: `${top.length > 0 ? esc(top[0].name) : '—'}`,
+        tone: 'info',
+      },
     ];
 
     const cardHtml = cards.map(c => `
       <div class="sales__card sales__card--${esc(c.tone)}">
         <span class="sales__card-label">${esc(c.label)}</span>
         <span class="sales__card-value">${esc(c.value)}</span>
-        <span class="sales__card-hint">${esc(c.hint)}</span>
+        <span class="sales__card-hint">${c.hint}</span>
       </div>`).join('');
 
-    // Per-store table
-    const storeRows = storesList.length === 0
-      ? `<tr><td colspan="3" class="sales__empty">${t('admin.noStoreData')}</td></tr>`
+    // --- Revenue by store (visual bars) ---
+    const maxStoreRevenue = storesList.length > 0 ? Math.max(...storesList.map(s => s.revenue)) : 1;
+    const storeBarHtml = storesList.length === 0
+      ? `<p class="sales__empty">${t('admin.noStoreData')}</p>`
       : storesList.map(s => {
-          const share = totals.revenue > 0 ? Math.round((s.revenue / totals.revenue) * 100) : 0;
+          const pct = maxStoreRevenue > 0 ? Math.round((s.revenue / maxStoreRevenue) * 100) : 0;
           return `
-            <tr>
-              <td>${esc(s.name)}</td>
-              <td class="sales__num">${s.count}</td>
-              <td class="sales__num">${fmtMoney(s.revenue)} <span class="sales__share">${share}%</span></td>
-            </tr>`;
+            <div class="sales__store-row">
+              <span class="sales__store-name">${esc(s.name)}</span>
+              <div class="sales__store-bar-wrap">
+                <div class="sales__store-bar" style="width:${pct}%"></div>
+              </div>
+              <div class="sales__store-stats">
+                <div class="sales__store-revenue">${fmtMoney(s.revenue)}</div>
+                <div class="sales__store-count">${s.count} ${s.count === 1 ? 'order' : 'orders'}</div>
+              </div>
+            </div>`;
         }).join('');
 
-    // Top items table
-    const itemRows = top.length === 0
-      ? `<tr><td colspan="3" class="sales__empty">${t('admin.noItemsSold')}</td></tr>`
-      : top.map((it, i) => `
-          <tr>
-            <td class="sales__rank">${i + 1}</td>
-            <td>${esc(it.name)}</td>
-            <td class="sales__num">${it.qty}</td>
-            <td class="sales__num">${fmtMoney(it.revenue)}</td>
-          </tr>`).join('');
+    // --- Top items ranked list ---
+    const itemHtml = top.length === 0
+      ? `<p class="sales__empty">${t('admin.noItemsSold')}</p>`
+      : top.map((it, i) => {
+          const rankCls = i < 3 ? ` sales__rank--${i + 1}` : '';
+          return `
+            <div class="sales__item-row">
+              <span class="sales__rank${rankCls}">${i + 1}</span>
+              <div class="sales__item-info">
+                <div class="sales__item-name">${esc(it.name)}</div>
+                <div class="sales__item-qty">${it.qty} sold</div>
+              </div>
+              <span class="sales__item-revenue">${fmtMoney(it.revenue)}</span>
+            </div>`;
+        }).join('');
 
     root.innerHTML = `
       <div class="sales__cards">${cardHtml}</div>
@@ -608,26 +666,16 @@
         <section class="sales__panel">
           <header class="sales__panel-head">
             <h2 class="sales__panel-title">${t('admin.revenueByStore')}</h2>
-            <p class="sales__panel-sub">${t('admin.nonCancelledPlural')}</p>
+            <p class="sales__panel-sub">${activeCount} ${activeCount === 1 ? 'order' : 'orders'}</p>
           </header>
-          <table class="sales__table">
-            <thead>
-              <tr><th>${t('admin.store')}</th><th class="sales__num">${t('admin.ordersCol')}</th><th class="sales__num">${t('admin.revenue')}</th></tr>
-            </thead>
-            <tbody>${storeRows}</tbody>
-          </table>
+          ${storeBarHtml}
         </section>
         <section class="sales__panel">
           <header class="sales__panel-head">
             <h2 class="sales__panel-title">${t('admin.topItems')}</h2>
             <p class="sales__panel-sub">${t('admin.byQuantity')}</p>
           </header>
-          <table class="sales__table">
-            <thead>
-              <tr><th class="sales__rank">#</th><th>${t('admin.itemCol')}</th><th class="sales__num">${t('admin.qty')}</th><th class="sales__num">${t('admin.revenue')}</th></tr>
-            </thead>
-            <tbody>${itemRows}</tbody>
-          </table>
+          ${itemHtml}
         </section>
       </div>`;
   }

@@ -310,17 +310,30 @@
 
     .mnu__cat-badge { font-size: 0.7rem; font-weight: 600; color: var(--muted); }
 
-    /* ---------- Sales summary (Task G) ---------- */
-    .sales__body { display: flex; flex-direction: column; gap: 18px; }
+    /* ---------- Sales summary (redesigned) ---------- */
+    .sales__body { display: flex; flex-direction: column; gap: 20px; }
 
+    /* Date filter pills */
+    .sales__filter { display: flex; gap: 4px; background: var(--latte); border-radius: 10px; padding: 3px; }
+    body.dark .sales__filter { background: rgba(255,255,255,0.06); }
+    .sales__filter-btn {
+      font-size: 0.72rem; font-weight: 600; padding: 5px 12px; border-radius: 8px;
+      border: none; background: transparent; color: var(--muted); cursor: pointer;
+      transition: all 0.2s var(--ease); white-space: nowrap;
+    }
+    .sales__filter-btn:hover { color: var(--fg); }
+    .sales__filter-btn.is-active { background: var(--steam); color: var(--roast); box-shadow: var(--shadow-sm); }
+    body.dark .sales__filter-btn.is-active { background: rgba(255,255,255,0.1); color: var(--steam); }
+
+    /* 3 key metric cards */
     .sales__cards {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
     }
     .sales__card {
       display: flex; flex-direction: column; gap: 6px;
-      padding: 18px 20px;
+      padding: 20px 22px;
       background: color-mix(in srgb, var(--bg) 72%, transparent);
       border: 1.5px solid var(--line);
       border-radius: var(--radius);
@@ -335,15 +348,14 @@
     }
     .sales__card--primary::before { background: var(--copper); }
     .sales__card--neutral::before { background: rgba(122,91,77,0.6); }
-    .sales__card--paid::before    { background: #4c9a5f; }
-    .sales__card--unpaid::before  { background: var(--copper-dark); }
+    .sales__card--info::before    { background: #4c9a5f; }
 
     .sales__card-label {
       font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
       color: var(--muted);
     }
     .sales__card-value {
-      font-family: var(--font-head); font-size: 1.85rem; font-weight: 700; line-height: 1.1;
+      font-family: var(--font-head); font-size: 2rem; font-weight: 700; line-height: 1.1;
       color: var(--roast);
     }
     body.dark .sales__card-value { color: var(--steam); }
@@ -351,6 +363,7 @@
     body.dark .sales__card--primary .sales__card-value { color: var(--copper); }
     .sales__card-hint { font-size: 0.78rem; color: var(--muted); }
 
+    /* Store revenue bars */
     .sales__grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -364,7 +377,7 @@
       padding: 18px 20px;
       min-width: 0;
     }
-    .sales__panel-head { margin-bottom: 12px; }
+    .sales__panel-head { margin-bottom: 14px; }
     .sales__panel-title {
       font-family: var(--font-head); font-size: 1.05rem; font-weight: 600;
       color: var(--roast); margin: 0 0 2px;
@@ -372,6 +385,43 @@
     body.dark .sales__panel-title { color: var(--steam); }
     .sales__panel-sub { font-size: 0.76rem; color: var(--muted); margin: 0; }
 
+    /* Store rows with bars */
+    .sales__store-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--line);
+    }
+    .sales__store-row:last-child { border-bottom: 0; }
+    .sales__store-name { width: 120px; font-size: 0.85rem; font-weight: 500; color: var(--fg); flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sales__store-bar-wrap { flex: 1; height: 22px; background: var(--latte); border-radius: 6px; overflow: hidden; position: relative; }
+    body.dark .sales__store-bar-wrap { background: rgba(255,255,255,0.06); }
+    .sales__store-bar { height: 100%; background: linear-gradient(90deg, var(--copper), var(--copper-dark)); border-radius: 6px; transition: width 0.5s var(--ease); min-width: 2px; }
+    .sales__store-stats { width: 100px; text-align: right; flex-shrink: 0; }
+    .sales__store-revenue { font-size: 0.88rem; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+    .sales__store-count { font-size: 0.7rem; color: var(--muted); }
+
+    /* Top items ranked list */
+    .sales__item-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--line);
+    }
+    .sales__item-row:last-child { border-bottom: 0; }
+    .sales__rank {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; font-family: var(--font-head);
+      background: var(--latte); color: var(--copper-dark); flex-shrink: 0;
+    }
+    body.dark .sales__rank { background: rgba(255,255,255,0.08); color: var(--copper); }
+    .sales__rank--1 { background: var(--copper); color: var(--steam); }
+    .sales__rank--2 { background: rgba(198,123,78,0.6); color: var(--steam); }
+    .sales__rank--3 { background: rgba(198,123,78,0.35); color: var(--roast); }
+    body.dark .sales__rank--3 { color: var(--steam); }
+    .sales__item-info { flex: 1; min-width: 0; }
+    .sales__item-name { font-size: 0.88rem; font-weight: 500; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sales__item-qty { font-size: 0.72rem; color: var(--muted); }
+    .sales__item-revenue { font-size: 0.88rem; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    /* Table fallback */
     .sales__table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
     .sales__table th, .sales__table td {
       text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line);
@@ -383,14 +433,14 @@
     .sales__table tbody tr:last-child td { border-bottom: 0; }
     .sales__table tbody tr:hover { background: rgba(198,123,78,0.05); }
     .sales__num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .sales__rank { width: 28px; color: var(--copper-dark); font-weight: 700; font-family: var(--font-head); }
-    body.dark .sales__rank { color: var(--copper); }
-    .sales__share {
-      display: inline-block; margin-left: 6px;
-      font-size: 0.7rem; color: var(--muted);
-      font-variant-numeric: tabular-nums;
+    .sales__empty { text-align: center; color: var(--muted); padding: 24px 0; font-size: 0.85rem; }
+
+    @media (max-width: 900px) {
+      .sales__cards { grid-template-columns: 1fr; }
+      .sales__grid { grid-template-columns: 1fr; }
+      .sales__filter { flex-wrap: wrap; }
+      .sales__store-name { width: 80px; font-size: 0.78rem; }
     }
-    .sales__empty { text-align: center; color: var(--muted); padding: 18px 8px !important; }
 
     /* ---------- Responsive ---------- */
     @media (max-width: 760px) {
@@ -520,6 +570,12 @@
             <div class="orders__toolbar">
               <p class="orders__meta" id="salesMeta">—</p>
               <div class="orders__toolbar-actions">
+                <div class="sales__filter" role="group" aria-label="Date range">
+                  <button type="button" class="sales__filter-btn is-active" data-range="all" data-i18n="admin.allTime">All time</button>
+                  <button type="button" class="sales__filter-btn" data-range="month" data-i18n="admin.thisMonth">This month</button>
+                  <button type="button" class="sales__filter-btn" data-range="week" data-i18n="admin.thisWeek">This week</button>
+                  <button type="button" class="sales__filter-btn" data-range="today" data-i18n="admin.today">Today</button>
+                </div>
                 <span class="seed-chip" id="salesSeedChip" hidden>showing sample data</span>
                 <button type="button" class="adm__refresh" id="salesRefresh" data-action="refresh-orders" aria-label="Refresh sales">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -538,8 +594,9 @@
 
   <script src="../supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../databa../data.js"></script>
+  <script src="../data.js"></script>
   <script src="data.js"></script>
+  <script src="../data-tr.js"></script>
   <script src="../i18n.js"></script>
   <script src="orders.js"></script>
   <script src="dashboard.js"></script>

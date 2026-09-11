@@ -182,8 +182,12 @@
       // versioned payload: { version, data }
       const data = (parsed && typeof parsed === 'object' && 'data' in parsed) ? parsed.data : parsed;
       if (!Array.isArray(data)) return [];
-      const v = (parsed && parsed.version) || 0;
-      if (v !== (window.DATA && DATA.version)) return []; // rebuild from scratch on schema bump
+      // Only reject on version mismatch when DATA is loaded — if DATA isn't
+      // available yet (e.g. cross-tab auth event before scripts finish), keep
+      // the stored cart so it isn't wiped.
+      const stored = (parsed && parsed.version) || 0;
+      const current = (window.DATA && DATA.version) || 0;
+      if (stored && current && stored !== current) return []; // schema bump → rebuild
       return data;
     } catch { return []; }
   }
@@ -822,6 +826,11 @@
     }
   }
 
+  // --- Cross-tab auth guard ---
+  // When admin logs in on another tab, Supabase fires onAuthStateChange here too.
+  // This flag ensures we only update the customer nav for logins that originate on THIS page.
+  let localAuthEvent = false;
+
   // Real Supabase login
   async function handleLogin(e) {
     e.preventDefault();
@@ -840,6 +849,7 @@
       authFieldError('login', 'email', error.message);
       return;
     }
+    localAuthEvent = true;
     closeAuth();
     // Session will be picked up by the auth state listener / restore
   }
@@ -874,6 +884,7 @@
       authFieldError('signup', 'email', error.message);
       return;
     }
+    localAuthEvent = true;
     closeAuth();
     // If email confirmation required, user will get an email.
     // If not, they may be logged in immediately.
@@ -967,6 +978,11 @@
     if (!cloud) return;
     // Listen for auth state changes (login, logout, password reset, etc.)
     cloud.auth.onAuthStateChange((event, session) => {
+      // Ignore cross-tab sign-ins (e.g. admin logging in on another tab).
+      // Only update the customer nav for local logins or session refreshes.
+      if (event === 'SIGNED_IN' && !localAuthEvent) return;
+      localAuthEvent = false;
+
       if (session?.user) {
         const meta = session.user.user_metadata || {};
         const name = meta.full_name || session.user.email?.split('@')[0] || t('auth.loggedIn');
