@@ -21,6 +21,9 @@
   };
 
   function buildClient() {
+    // Prefer the session-augmented admin client (set by the inline auth guard in
+    // index.html) so WRITES (order status, import) pass is_admin() RLS.
+    if (window.AdminSupabase) return window.AdminSupabase;
     if (state.client) return state.client;
     const cfg = window.EO_SUPABASE;
     if (!cfg || !window.supabase) return null;

@@ -826,6 +826,26 @@
     }
   }
 
+  // Generic auth error shown in the auth modal (used when cloud not configured
+  // or for non-field-specific failures).
+  function showAuthError(message) {
+    const activePane = authModal?.querySelector('.auth__pane.is-active');
+    if (!activePane) return;
+    const group = activePane.querySelector('.form__group') || activePane.querySelector('.form__error');
+    const err = activePane.querySelector('.form__error');
+    if (err) {
+      err.textContent = message;
+      err.style.color = '#c0392b';
+    } else if (group) {
+      // fallback: create one
+      const div = document.createElement('div');
+      div.className = 'form__error';
+      div.textContent = message;
+      div.style.color = '#c0392b';
+      group.appendChild(div);
+    }
+  }
+
   // --- Cross-tab auth guard ---
   // When admin logs in on another tab, Supabase fires onAuthStateChange here too.
   // This flag ensures we only update the customer nav for logins that originate on THIS page.
@@ -842,11 +862,17 @@
     if (!cloud) { showAuthError(t('auth.notConfigured')); return; }
 
     setBusy('login', true);
-    const { error } = await cloud.auth.signInWithPassword({ email: em, password: pw });
-    setBusy('login', false);
+    try {
+      const { error } = await cloud.auth.signInWithPassword({ email: em, password: pw });
+      setBusy('login', false);
 
-    if (error) {
-      authFieldError('login', 'email', error.message);
+      if (error) {
+        authFieldError('login', 'email', error.message);
+        return;
+      }
+    } catch (e) {
+      setBusy('login', false);
+      showAuthError(e.message || t('auth.unexpected'));
       return;
     }
     localAuthEvent = true;
@@ -873,15 +899,21 @@
     if (!cloud) { showAuthError(t('auth.notConfigured')); return; }
 
     setBusy('signup', true);
-    const { data, error } = await cloud.auth.signUp({
-      email: em,
-      password: pw,
-      options: { data: { full_name: name, phone } }
-    });
-    setBusy('signup', false);
+    try {
+      const { data, error } = await cloud.auth.signUp({
+        email: em,
+        password: pw,
+        options: { data: { full_name: name, phone } }
+      });
+      setBusy('signup', false);
 
-    if (error) {
-      authFieldError('signup', 'email', error.message);
+      if (error) {
+        authFieldError('signup', 'email', error.message);
+        return;
+      }
+    } catch (e) {
+      setBusy('signup', false);
+      showAuthError(e.message || t('auth.unexpected'));
       return;
     }
     localAuthEvent = true;
@@ -898,18 +930,24 @@
     if (!em) { authFieldError('login', 'email', t('auth.errResetEmail')); return; }
     if (!cloud) return;
 
-    const { error } = await cloud.auth.resetPasswordForEmail(em);
-    if (error) {
-      authFieldError('login', 'email', error.message);
-      return;
-    }
-    // Show success inline
-    const msg = t('auth.resetSent');
-    const errEl = $('#loginForm [name="email"]').closest('.form__group').querySelector('.form__error');
-    if (errEl) {
-      errEl.textContent = msg;
-      errEl.style.color = '#2e7d32';
-      setTimeout(() => { errEl.style.color = ''; }, 6000);
+    try {
+      const { error } = await cloud.auth.resetPasswordForEmail(em, {
+        redirectTo: window.location.origin + '/admin/reset-password.html'
+      });
+      if (error) {
+        authFieldError('login', 'email', error.message);
+        return;
+      }
+      // Show success inline
+      const msg = t('auth.resetSent');
+      const errEl = $('#loginForm [name="email"]').closest('.form__group').querySelector('.form__error');
+      if (errEl) {
+        errEl.textContent = msg;
+        errEl.style.color = '#2e7d32';
+        setTimeout(() => { errEl.style.color = ''; }, 6000);
+      }
+    } catch (e) {
+      showAuthError(e.message || t('auth.unexpected'));
     }
   }
 

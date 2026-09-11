@@ -11,11 +11,27 @@
     return s ? s.name : (id || '—');
   };
 
+  // Shared Supabase client. Prefer the session-augmented admin client (set by the
+  // inline auth guard in index.html) so WRITES (price, sold-out) pass is_admin()
+  // RLS. Anon-key client is only a fallback (reads are fine; writes would be
+  // rejected by RLS until the session client is ready).
+  function adminClient() {
+    if (window.AdminSupabase) return window.AdminSupabase;
+    const cfg = window.EO_SUPABASE;
+    return (cfg && window.supabase)
+      ? window.supabase.createClient(cfg.url, cfg.anonKey)
+      : null;
+  }
+
   /* ---------- Cloud-first order source (Phase 2) ---------- */
   const useCloud = () => !!(window.EOOrders && window.EOOrders.isOnline() && window.EOOrders.isReady());
 
   // Menu cloud data — must be initialized BEFORE any render call that may read it
   let cloudMenuItems = [];
+
+  // Sales date range filter state — must be declared BEFORE top-level auto-run
+  // calls renderSales() (which reads salesRange).
+  let salesRange = 'all'; // 'all' | 'today' | 'week' | 'month'
 
   function currentOrders() {
     if (useCloud()) {
@@ -222,9 +238,9 @@
     renderMenu();
     renderSales();
     // Subscribe to menu changes for live updates
-    if (window.EO_SUPABASE && window.supabase) {
-      const client = window.supabase.createClient(window.EO_SUPABASE.url, window.EO_SUPABASE.anonKey);
-      client.channel('eo-admin-menu')
+    const rclient = adminClient();
+    if (rclient) {
+      rclient.channel('eo-admin-menu')
         .on('postgres_changes',
           { event: '*', schema: 'public', table: 'menu_items' },
           async () => { await loadMenuFromDB(); renderMenu(); renderSales(); })
@@ -239,10 +255,9 @@
   const MENU_OVERRIDES_KEY = 'emberOakMenuOverrides';
 
   async function loadMenuFromDB() {
-    const cfg = window.EO_SUPABASE;
-    if (!cfg || !window.supabase) return false;
+    const client = adminClient();
+    if (!client) return false;
     try {
-      const client = window.supabase.createClient(cfg.url, cfg.anonKey);
       const { data, error } = await client
         .from('menu_items')
         .select('*')
@@ -356,9 +371,7 @@
   }
 
   async function menuAction(action, id, target) {
-    const cfg = window.EO_SUPABASE;
-    const client = (cfg && window.supabase)
-      ? window.supabase.createClient(cfg.url, cfg.anonKey) : null;
+    const client = adminClient();
 
     if (action === 'menu-soldout') {
       const on = !!target && target.checked;
@@ -435,9 +448,7 @@
     const price = Number(raw);
     if (isNaN(price) || price < 0 || price > 99) { renderMenu(); return; }
 
-    const cfg = window.EO_SUPABASE;
-    const client = (cfg && window.supabase)
-      ? window.supabase.createClient(cfg.url, cfg.anonKey) : null;
+    const client = adminClient();
 
     if (client) {
       const { error } = await client.from('menu_items')
@@ -536,9 +547,6 @@
     });
     return out;
   }
-
-  /* ---------- Sales date range state ---------- */
-  let salesRange = 'all'; // 'all' | 'today' | 'week' | 'month'
 
   function filterOrdersByRange(orders, range) {
     if (range === 'all') return orders;
