@@ -688,12 +688,104 @@
       </div>`;
   }
 
+  /* ===========================================================
+   Messages (Phase 2) — contact form submissions from Supabase
+   =========================================================== */
+  async function loadMessages() {
+    const client = adminClient();
+    if (!client) return [];
+    try {
+      const { data, error } = await client
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.warn('[messages] load:', error.message);
+        return [];
+      }
+      return data || [];
+    } catch (e) {
+      console.warn('[messages] load failed:', e.message);
+      return [];
+    }
+  }
+
+  async function markMessageRead(id) {
+    const client = adminClient();
+    if (!client) return false;
+    try {
+      const { error } = await client
+        .from('messages')
+        .update({ read: true })
+        .eq('id', id);
+      if (error) console.warn('[messages] mark read:', error.message);
+      return !error;
+    } catch (e) {
+      console.warn('[messages] mark read failed:', e.message);
+      return false;
+    }
+  }
+
+  function renderMessages() {
+    const listEl = document.getElementById('msgList');
+    const meta = document.getElementById('msgMeta');
+    if (!listEl) return;
+
+    loadMessages().then(messages => {
+      const unread = messages.filter(m => !m.read).length;
+      if (meta) meta.textContent = `${messages.length} messages · ${unread} unread`;
+
+      if (messages.length === 0) {
+        listEl.innerHTML = `
+          <div class="adm__empty">
+            <div class="adm__empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <h3>${t('admin.noMessages')}</h3>
+            <p>${t('admin.noMessagesSub')}</p>
+          </div>`;
+        return;
+      }
+
+      listEl.innerHTML = messages.map(m => `
+        <div class="msg__row${m.read ? '' : ' is-unread'}" data-msg-id="${esc(m.id)}">
+          <div class="msg__head">
+            <span class="msg__name">${esc(m.name)}</span>
+            <span class="msg__time">${esc(new Date(m.created_at).toLocaleString())}</span>
+          </div>
+          <div class="msg__meta">
+            <span class="msg__email">${esc(m.email)}</span>
+            <span class="msg__topic">${esc(m.topic)}</span>
+          </div>
+          <p class="msg__text">${esc(m.message)}</p>
+          ${!m.read ? `
+            <button type="button" class="msg__mark-read" data-action="msg-mark-read" data-id="${esc(m.id)}">${t('admin.markRead')}</button>
+          ` : ''}
+        </div>
+      `).join('');
+
+      // Mark-as-read buttons
+      listEl.querySelectorAll('[data-action="msg-mark-read"]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const row = btn.closest('.msg__row');
+          if (!row) return;
+          const id = row.dataset.msgId;
+          const ok = await markMessageRead(id);
+          if (ok) { row.classList.remove('is-unread'); btn.remove(); }
+        });
+      });
+    });
+  }
+
   /* Re-render all panels when language changes */
   window.addEventListener('eo:languagechange', function () {
     render();
     renderMenu();
     renderSales();
+    renderMessages();
   });
 
-  window.AdminDashboard = { render, renderMenu, renderSales };
+  window.AdminDashboard = { render, renderMenu, renderSales, renderMessages };
 })();

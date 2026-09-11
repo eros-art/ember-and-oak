@@ -442,6 +442,47 @@
       .sales__store-name { width: 80px; font-size: 0.78rem; }
     }
 
+    /* ---------- Messages (Phase 2) ---------- */
+    .msg__list { display: flex; flex-direction: column; gap: 12px; }
+    .msg__row {
+      background: color-mix(in srgb, var(--bg) 72%, transparent);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 16px 18px;
+      position: relative;
+    }
+    .msg__row.is-unread {
+      border-left: 4px solid var(--copper);
+    }
+    .msg__row.is-unread::before {
+      content: '';
+      position: absolute;
+      right: 16px; top: 50%; transform: translateY(-50%);
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--copper);
+    }
+    .msg__head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .msg__name { font-weight: 600; color: var(--fg); font-size: 0.9rem; }
+    .msg__time { font-size: 0.74rem; color: var(--muted); white-space: nowrap; }
+    .msg__meta { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+    .msg__email { font-size: 0.78rem; color: var(--muted); }
+    .msg__topic {
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+      background: var(--latte); color: var(--roast); padding: 2px 8px; border-radius: 999px;
+    }
+    body.dark .msg__topic { background: rgba(255,255,255,0.08); color: var(--copper); }
+    .msg__text { font-size: 0.85rem; color: var(--fg); line-height: 1.5; margin: 0; }
+    .msg__mark-read {
+      position: absolute; right: 16px; bottom: 12px;
+      font-size: 0.7rem; font-weight: 600; padding: 6px 12px;
+      border-radius: var(--radius-sm); border: none;
+      background: var(--copper); color: var(--steam); cursor: pointer;
+      transition: all 0.2s var(--ease);
+    }
+    .msg__mark-read:hover { background: var(--copper-dark); }
+    .adm__empty-icon svg path { stroke: var(--copper); }
+
     /* ---------- Responsive ---------- */
     @media (max-width: 760px) {
       .adm { grid-template-columns: 1fr; }
@@ -461,6 +502,8 @@
       .sales__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .sales__grid { grid-template-columns: 1fr; }
       .sales__card-value { font-size: 1.55rem; }
+      .msg__row { padding: 14px 14px; }
+      .msg__mark-read { position: static; margin-top: 10px; align-self: flex-start; }
     }
   </style>
 </head>
@@ -502,6 +545,12 @@
             <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
           </svg>
           Sales Summary
+        </button>
+        <button type="button" class="adm__link" data-tab="messages" aria-selected="false" aria-controls="tab-messages" data-i18n="admin.messages">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          Messages
         </button>
       </nav>
 
@@ -588,6 +637,25 @@
             <div class="sales__body" id="salesPane"></div>
           </div>
         </section>
+
+        <!-- Tab: Messages -->
+        <section class="adm__panel" id="tab-messages" role="tabpanel" aria-label="Messages" hidden>
+          <div class="msg">
+            <div class="orders__toolbar">
+              <p class="orders__meta" id="msgMeta">—</p>
+              <div class="orders__toolbar-actions">
+                <span class="seed-chip" id="msgSeedChip" hidden>showing sample data</span>
+                <button type="button" class="adm__refresh" id="msgRefresh" data-action="refresh-messages" aria-label="Refresh messages">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+            </div>
+            <div class="msg__list" id="msgList"></div>
+          </div>
+        </section>
       </main>
     </div>
   </div>
@@ -607,7 +675,7 @@
         ? window.supabase.createClient(cfg.url, cfg.anonKey)
         : null;
 
-      const TITLES = { orders: 'admin.orders', menu: 'admin.menu', sales: 'admin.sales' };
+      const TITLES = { orders: 'admin.orders', menu: 'admin.menu', sales: 'admin.sales', messages: 'admin.messages' };
       const titleEl = document.getElementById('admTitle');
       const tabs = Array.from(document.querySelectorAll('.adm__link[data-tab]'));
       const panels = Array.from(document.querySelectorAll('.adm__panel'));
