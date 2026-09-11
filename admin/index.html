@@ -6,16 +6,16 @@
   <meta name="robots" content="noindex, nofollow" />
   <title>Dashboard — Ember &amp; Oak Admin</title>
 
-  <link rel="icon" href="../customer/favicon.ico" sizes="48x48">
-  <link rel="icon" href="../customer/favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="../customer/apple-touch-icon.png">
-  <link rel="manifest" href="../customer/site.webmanifest">
+  <link rel="icon" href="../favicon.ico" sizes="48x48">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <link rel="manifest" href="../site.webmanifest">
   <meta name="theme-color" content="#2C1810">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../database/styles.css" />
+  <link rel="stylesheet" href="../styles.css" />
   <style>
     .adm {
       --side-bg: #1e110b;
@@ -319,6 +319,34 @@
 
     .mnu__cat-badge { font-size: 0.7rem; font-weight: 600; color: var(--muted); }
 
+    /* ---------- Add menu item form (Phase 5.1) ---------- */
+    .mnu__add-form {
+      background: color-mix(in srgb, var(--bg) 72%, transparent);
+      border: 1.5px dashed var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 2px;
+    }
+    .mnu__add-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px 12px;
+    }
+    .mnu__add-field { display: flex; flex-direction: column; gap: 4px; }
+    .mnu__add-field--wide { grid-column: span 3; }
+    .mnu__add-label { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+    .mnu__add-input {
+      width: 100%; padding: 8px 10px;
+      border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+      background: transparent; color: var(--fg); font-size: 0.86rem;
+      font-family: var(--font-body);
+    }
+    .mnu__add-input:focus { outline: none; border-color: var(--copper); }
+    .mnu__add-msg { font-size: 0.8rem; margin: 10px 0 0; }
+    .mnu__add-msg.is-ok { color: #4c9a5f; }
+    .mnu__add-msg.is-err { color: #c0392b; }
+    .mnu__add-actions { display: flex; gap: 8px; margin-top: 12px; }
+
     /* ---------- Sales summary (redesigned) ---------- */
     .sales__body { display: flex; flex-direction: column; gap: 20px; }
 
@@ -508,6 +536,8 @@
       .mnu__thumb { width: 48px; height: 48px; }
       .mnu__cat { display: none; }
       .mnu__flags { grid-column: 2 / -1; flex-direction: row; align-items: center; }
+      .mnu__add-grid { grid-template-columns: 1fr; }
+      .mnu__add-field--wide { grid-column: span 1; }
       .sales__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .sales__grid { grid-template-columns: 1fr; }
       .sales__card-value { font-size: 1.55rem; }
@@ -615,9 +645,46 @@
             <div class="mnu__toolbar">
               <p class="mnu__meta" id="menMeta">—</p>
               <div class="mnu__toolbar-actions">
-                <button type="button" class="adm__mini adm__mini--reopen" data-action="menu-reset-all">Reset all overrides</button>
+                <button type="button" class="adm__mini adm__mini--done" data-action="menu-add" data-i18n="admin.addItem">Add item</button>
+                <button type="button" class="adm__mini adm__mini--reopen" data-action="menu-reset-all" data-i18n="admin.resetAll">Reset all overrides</button>
               </div>
             </div>
+
+            <div class="mnu__add-form" id="mnuAddForm" hidden>
+              <div class="mnu__add-grid">
+                <label class="mnu__add-field">
+                  <span class="mnu__add-label" data-i18n="admin.itemName">Item name</span>
+                  <input type="text" id="mnuAddName" class="mnu__add-input" autocomplete="off" />
+                </label>
+                <label class="mnu__add-field">
+                  <span class="mnu__add-label" data-i18n="admin.itemCategory">Category</span>
+                  <input type="text" id="mnuAddCategory" class="mnu__add-input" list="mnuCategoryList" autocomplete="off" />
+                  <datalist id="mnuCategoryList">
+                    <option value="coffee"></option>
+                    <option value="specialty"></option>
+                    <option value="food"></option>
+                  </datalist>
+                </label>
+                <label class="mnu__add-field">
+                  <span class="mnu__add-label" data-i18n="admin.itemPrice">Price</span>
+                  <input type="number" id="mnuAddPrice" class="mnu__add-input" step="0.25" min="0" max="99" inputmode="decimal" />
+                </label>
+                <label class="mnu__add-field mnu__add-field--wide">
+                  <span class="mnu__add-label" data-i18n="admin.itemDesc">Short description</span>
+                  <input type="text" id="mnuAddDesc" class="mnu__add-input" autocomplete="off" />
+                </label>
+                <label class="mnu__add-field mnu__add-field--wide">
+                  <span class="mnu__add-label" data-i18n="admin.itemImage">Image URL (optional)</span>
+                  <input type="text" id="mnuAddImage" class="mnu__add-input" autocomplete="off" />
+                </label>
+              </div>
+              <p class="mnu__add-msg" id="mnuAddMsg" role="status" hidden></p>
+              <div class="mnu__add-actions">
+                <button type="button" class="adm__mini adm__mini--done" data-action="menu-add-submit" data-i18n="admin.addItemBtn">Add item</button>
+                <button type="button" class="adm__mini" data-action="menu-add-cancel" data-i18n="admin.cancel">Cancel</button>
+              </div>
+            </div>
+
             <div class="mnu__list" id="menuList"></div>
           </div>
         </section>

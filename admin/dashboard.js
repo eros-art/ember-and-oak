@@ -375,6 +375,10 @@
   async function menuAction(action, id, target) {
     const client = adminClient();
 
+    if (action === 'menu-add') { toggleAddForm(); return; }
+    if (action === 'menu-add-cancel') { hideAddForm(); return; }
+    if (action === 'menu-add-submit') { addMenuItem(); return; }
+
     if (action === 'menu-soldout') {
       const on = !!target && target.checked;
       if (client) {
@@ -464,6 +468,110 @@
       saveOverrides(map);
     }
     renderMenu();
+  }
+
+  /* ----------------------------------------------------------
+   * Add menu item (Phase 5.1) — INSERT via the admin client so
+   * is_admin() RLS passes. On success the list re-renders and the
+   * customer site updates live through the menu realtime channel.
+   * ---------------------------------------------------------- */
+  function mnuInput(id) { return document.getElementById(id); }
+  function mnuAddMsg(text, kind) {
+    const el = document.getElementById('mnuAddMsg');
+    if (!el) return;
+    el.textContent = text;
+    el.classList.toggle('is-ok', kind === 'ok');
+    el.classList.toggle('is-err', kind === 'err');
+    el.hidden = false;
+  }
+  function refreshCategoryList() {
+    const dl = document.getElementById('mnuCategoryList');
+    if (!dl) return;
+    const seen = new Set();
+    effectiveMenu().forEach(i => { if (i.category) seen.add(i.category); });
+    dl.innerHTML = Array.from(seen)
+      .map(c => `<option value="${esc(c)}"></option>`).join('') +
+      '<option value="coffee"></option><option value="specialty"></option><option value="food"></option>';
+  }
+  function slugify(s) {
+    return String(s || '').toLowerCase().trim()
+      .replace(/['’]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'item';
+  }
+  function uniqueItemId(name) {
+    const taken = new Set();
+    effectiveMenu().forEach(i => { if (i.id) taken.add(i.id); });
+    (window.DATA && DATA.menu || []).forEach(i => { if (i.id) taken.add(i.id); });
+    const base = slugify(name);
+    if (!taken.has(base)) return base;
+    let n = 2, id;
+    do { id = base + '-' + n++; } while (taken.has(id));
+    return id;
+  }
+  function toggleAddForm() {
+    const form = document.getElementById('mnuAddForm');
+    if (!form) return;
+    if (form.hidden) {
+      refreshCategoryList();
+      form.hidden = false;
+      const name = mnuInput('mnuAddName');
+      if (name) name.focus();
+    } else {
+      hideAddForm();
+    }
+  }
+  function hideAddForm() {
+    const form = document.getElementById('mnuAddForm');
+    if (!form) return;
+    form.hidden = true;
+    const msg = document.getElementById('mnuAddMsg');
+    if (msg) msg.hidden = true;
+  }
+  async function addMenuItem() {
+    const name = (mnuInput('mnuAddName').value || '').trim();
+    const category = (mnuInput('mnuAddCategory').value || '').toLowerCase().trim() || 'other';
+    const rawPrice = (mnuInput('mnuAddPrice').value || '').trim();
+    const desc = (mnuInput('mnuAddDesc').value || '').trim();
+    const img = (mnuInput('mnuAddImage').value || '').trim();
+    const price = Number(rawPrice);
+
+    if (!name || rawPrice === '' || isNaN(price) || price < 0 || price > 99) {
+      mnuAddMsg(t('admin.itemRequired'), 'err');
+      return;
+    }
+
+    const client = adminClient();
+    if (!client) { mnuAddMsg(t('admin.addItemError'), 'err'); return; }
+
+    const row = {
+      id: uniqueItemId(name),
+      name,
+      category,
+      short_desc: desc,
+      price: Math.round(price * 100) / 100,
+      image: img,
+      thumb: img,
+      tags: [],
+      sort_order: 0,
+      active: true,
+      sold_out: false,
+    };
+    const { error } = await client.from('menu_items').insert([row]);
+    if (error) {
+      console.warn('[menu] add:', error.message);
+      mnuAddMsg(t('admin.addItemError'), 'err');
+      return;
+    }
+
+    await loadMenuFromDB();
+    renderMenu();
+    // Reset the form for the next entry, keep it open to show confirmation.
+    ['mnuAddName', 'mnuAddCategory', 'mnuAddPrice', 'mnuAddDesc', 'mnuAddImage'].forEach(id => {
+      const el = mnuInput(id);
+      if (el) el.value = '';
+    });
+    mnuAddMsg(t('admin.itemAdded'), 'ok');
   }
 
   /* ----------------------------------------------------------
